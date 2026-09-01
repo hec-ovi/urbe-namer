@@ -4,7 +4,7 @@ import { NamingError } from "../errors.js";
 import { PromptLoader } from "../prompts/loader.js";
 import { WorksheetBuilder } from "../world/worksheet.js";
 import { NamePatcher } from "../world/patcher.js";
-import { CoverageValidator } from "../validate/coverage.js";
+import { CoverageValidator, namespaceOf } from "../validate/coverage.js";
 import { SchemaValidator } from "../validate/schemas.js";
 import { fewshotFile } from "./fewshots.js";
 import { chunkOutputSchema, districtsOutputSchema } from "./output-schemas.js";
@@ -143,9 +143,9 @@ export class NamingPass {
 
       const byId = new Map(worksheet.map((n) => [n.id, n]));
       const entities = broken.map((id) => byId.get(id)).filter((n): n is Nameable => n !== undefined);
-      const groupsToFix = new Set(entities.map((n) => n.group));
+      const namespacesToFix = new Set(entities.map(namespaceOf));
       const taken = worksheet
-        .filter((n) => groupsToFix.has(n.group) && names[n.id] && !broken.includes(n.id))
+        .filter((n) => namespacesToFix.has(namespaceOf(n)) && names[n.id] && !broken.includes(n.id))
         .map((n) => `${n.group}: ${names[n.id]}`)
         .join("\n");
       const user = this.prompts.render("naming/repair.md", {

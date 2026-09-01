@@ -1,5 +1,12 @@
 import type { Nameable } from "../types.js";
 
+/** Uniqueness namespace: all parcels share one (a hotel and a mall must not collide);
+ *  districts and each transit kind keep their own, so an interchange may reuse a
+ *  station name across modes. */
+export function namespaceOf(entity: Nameable): string {
+  return entity.collection === "parcel" ? "parcel" : entity.group;
+}
+
 export interface CoverageReport {
   ok: boolean;
   /** worksheet ids the map did not name */
@@ -8,7 +15,7 @@ export interface CoverageReport {
   invented: string[];
   /** ids whose name is empty or whitespace */
   empty: string[];
-  /** ids whose name collides with another name in the same group (case-insensitive) */
+  /** ids whose name collides with another name in the same namespace (case-insensitive) */
   duplicated: string[];
 }
 
@@ -39,8 +46,9 @@ export class CoverageValidator {
         continue;
       }
       const key = name.trim().toLowerCase();
-      let perGroup = groupNames.get(entity.group);
-      if (!perGroup) groupNames.set(entity.group, (perGroup = new Map()));
+      const namespace = namespaceOf(entity);
+      let perGroup = groupNames.get(namespace);
+      if (!perGroup) groupNames.set(namespace, (perGroup = new Map()));
       const holders = perGroup.get(key) ?? [];
       holders.push(entity.id);
       perGroup.set(key, holders);

@@ -16,7 +16,7 @@ Two entry points, also exposed as a CLI (`npm run name`, `npm run types`).
 - Provider: Claude by default. With `LLM_BASE_URL` set in the environment, an OpenAI-compatible endpoint is used instead (local llama.cpp server works; `LLM_MODEL` names the served model or alias, `LLM_API_KEY` optional).
 
 ## Out
-- Named world: the input state, untouched except every nameable gains `name` and `meta.naming` records `{theme, model, namedAt}`. Saved alongside the placeholder version, never over it. Names are unique within their group (case-insensitive); themed chains stay possible through branch-qualified names.
+- Named world: the input state, untouched except every nameable gains `name` and `meta.naming` records `{theme, model, namedAt}`. Saved alongside the placeholder version, never over it. Names are unique case-insensitively within their namespace: all parcels share one namespace, districts and each transit kind keep their own (an interchange may reuse a station name across modes); themed chains stay possible through branch-qualified names.
 - NPC type set: [schema/npc-types.schema.json](schema/npc-types.schema.json). Each type:
   - `type`: unique machine string (`^[a-z][a-z0-9_]*$`), e.g. `dock_smuggler`.
   - `label`: display name.
