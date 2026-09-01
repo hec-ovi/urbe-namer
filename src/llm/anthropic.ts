@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NamingError } from "../errors.js";
 import type { ChatModel, ChatRequest } from "./model.js";
+import { parseJson } from "./parse.js";
 
 const DEFAULT_MODEL = "claude-opus-5";
 
@@ -38,17 +39,5 @@ export class AnthropicModel implements ChatModel {
       throw new NamingError("LLM_ERROR", `provider failure: ${message}`, error);
     }
     return parseJson(text);
-  }
-}
-
-/** Parses model output as JSON, tolerating a fenced code block around it. */
-export function parseJson(text: string): unknown {
-  const trimmed = text.trim();
-  const fenced = /^```(?:json)?\s*([\s\S]*?)\s*```$/.exec(trimmed);
-  const body = fenced ? fenced[1] : trimmed;
-  try {
-    return JSON.parse(body);
-  } catch {
-    throw new NamingError("LLM_ERROR", "model output is not valid JSON", { text: text.slice(0, 500) });
   }
 }

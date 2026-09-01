@@ -13,6 +13,7 @@ Two entry points, also exposed as a CLI (`npm run name`, `npm run types`).
 - `world`: a world state matching [schema/world-state.schema.json](schema/world-state.schema.json), naming's projection of the atlas `CityBlueprint` (../atlas/schema/blueprint.ts). Only the fields naming reads are validated; geometry passes through untouched. Nameables are selected by policy: every district, train/subway station and line, bus route, and every non-residential parcel. A state may instead pre-label entities with an explicit `placeholder` field; those are taken as-is (schema-agnostic walk).
 - `params`: [schema/params.schema.json](schema/params.schema.json). `theme` (required): the world description prompt, any era or tone. `model` optional. `ranges` (typing pass): min and max NPC types per category; never exact quotas.
 - `populationStats` (typing pass, optional): simulation's PopulationStats (../simulation/src/schemas/population.ts) for demographics grounding; absent, atlas `stats` ground the pass.
+- Provider: Claude by default. With `LLM_BASE_URL` set in the environment, an OpenAI-compatible endpoint is used instead (local llama.cpp server works; `LLM_MODEL` names the served model or alias, `LLM_API_KEY` optional).
 
 ## Out
 - Named world: the input state, untouched except every nameable gains `name` and `meta.naming` records `{theme, model, namedAt}`. Saved alongside the placeholder version, never over it. Names are unique within their group (case-insensitive); themed chains stay possible through branch-qualified names.
