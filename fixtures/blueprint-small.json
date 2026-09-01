@@ -1,0 +1,57 @@
+{
+  "meta": { "version": "0.2.0", "seed": "fixture-small", "units": "meters" },
+  "districts": [
+    { "id": "d0", "kind": "downtown", "tier": "high_rich", "maxFloors": 40 },
+    { "id": "d1", "kind": "industrial", "tier": "poor", "maxFloors": 8 },
+    { "id": "d2", "kind": "residential", "tier": "mid", "maxFloors": 12 }
+  ],
+  "parcels": [
+    { "id": "p0", "districtId": "d0", "type": "corpo", "tier": "high_rich" },
+    { "id": "p1", "districtId": "d0", "type": "restaurant", "tier": "rich" },
+    { "id": "p2", "districtId": "d0", "type": "coffee_shop", "tier": "mid" },
+    { "id": "p3", "districtId": "d0", "type": "hotel", "tier": "rich" },
+    { "id": "p4", "districtId": "d0", "type": "police", "tier": "mid" },
+    { "id": "p5", "districtId": "d0", "type": "residential", "tier": "rich" },
+    { "id": "p6", "districtId": "d0", "type": "offices", "tier": "mid" },
+    { "id": "p7", "districtId": "d0", "type": "hospital", "tier": "rich" },
+    { "id": "p8", "districtId": "d0", "type": "mall", "tier": "rich" },
+    { "id": "p9", "districtId": "d1", "type": "factory", "tier": "poor" },
+    { "id": "p10", "districtId": "d1", "type": "factory", "tier": "poor" },
+    { "id": "p11", "districtId": "d1", "type": "commerce", "tier": "poor" },
+    { "id": "p12", "districtId": "d1", "type": "residential", "tier": "poor" },
+    { "id": "p13", "districtId": "d1", "type": "clinic", "tier": "poor" },
+    { "id": "p14", "districtId": "d1", "type": "police", "tier": "poor" },
+    { "id": "p15", "districtId": "d2", "type": "residential", "tier": "mid" },
+    { "id": "p16", "districtId": "d2", "type": "residential", "tier": "mid" },
+    { "id": "p17", "districtId": "d2", "type": "coffee_shop", "tier": "mid" },
+    { "id": "p18", "districtId": "d2", "type": "commerce", "tier": "mid" },
+    { "id": "p19", "districtId": "d2", "type": "restaurant", "tier": "mid" },
+    { "id": "p20", "districtId": "d2", "type": "hospital", "tier": "mid" }
+  ],
+  "transit": {
+    "busStops": [
+      { "id": "bs0", "edgeId": "e0", "districtId": "d0" },
+      { "id": "bs1", "edgeId": "e4", "districtId": "d1" }
+    ],
+    "busRoutes": [{ "id": "br0", "stopIds": ["bs0", "bs1"], "edgeIds": ["e0", "e4"] }],
+    "trainStations": [
+      { "id": "ts0", "districtId": "d0", "entrances": [] },
+      { "id": "ts1", "districtId": "d1", "entrances": [] }
+    ],
+    "trainLines": [{ "id": "tl0", "stationIds": ["ts0", "ts1"], "underground": false }],
+    "subwayStations": [
+      { "id": "ss0", "districtId": "d0", "entrances": [] },
+      { "id": "ss1", "districtId": "d2", "entrances": [] }
+    ],
+    "subwayLines": [{ "id": "sl0", "stationIds": ["ss0", "ss1"], "underground": true }]
+  },
+  "stats": {
+    "population": 5200,
+    "parcelCounts": { "residential": 4, "factory": 2, "restaurant": 2, "coffee_shop": 2, "commerce": 2, "police": 2, "hospital": 2, "corpo": 1, "hotel": 1, "offices": 1, "mall": 1, "clinic": 1 },
+    "perDistrict": [
+      { "districtId": "d0", "population": 900, "parcelCounts": { "residential": 1 } },
+      { "districtId": "d1", "population": 1800, "parcelCounts": { "residential": 1, "factory": 2 } },
+      { "districtId": "d2", "population": 2500, "parcelCounts": { "residential": 2 } }
+    ]
+  }
+}

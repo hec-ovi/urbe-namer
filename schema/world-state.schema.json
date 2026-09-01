@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urbe/naming/world-state",
+  "title": "Naming's view of a world state",
+  "description": "Projection of the atlas CityBlueprint (../atlas/schema/blueprint.ts): only the fields naming reads are validated, geometry and everything else pass through untouched. Entities may carry an explicit `placeholder` (pre-labeled states, fixtures); a bare atlas blueprint carries none and nameables are selected by policy.",
+  "type": "object",
+  "required": ["meta", "districts", "parcels"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["seed"],
+      "properties": {
+        "version": { "type": "string" },
+        "seed": { "type": ["string", "integer"] },
+        "naming": { "$ref": "#/$defs/namingMeta" }
+      }
+    },
+    "districts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "tier"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "enum": ["downtown", "commercial", "residential", "industrial", "mixed"] },
+          "tier": { "$ref": "#/$defs/tier" },
+          "placeholder": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      }
+    },
+    "parcels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "districtId", "type", "tier"],
+        "properties": {
+          "id": { "type": "string" },
+          "districtId": { "type": "string" },
+          "type": { "$ref": "#/$defs/parcelType" },
+          "tier": { "$ref": "#/$defs/tier" },
+          "placeholder": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      }
+    },
+    "transit": {
+      "type": "object",
+      "properties": {
+        "busRoutes": { "type": "array", "items": { "$ref": "#/$defs/idEntity" } },
+        "trainStations": { "type": "array", "items": { "$ref": "#/$defs/idEntity" } },
+        "trainLines": { "type": "array", "items": { "$ref": "#/$defs/idEntity" } },
+        "subwayStations": { "type": "array", "items": { "$ref": "#/$defs/idEntity" } },
+        "subwayLines": { "type": "array", "items": { "$ref": "#/$defs/idEntity" } }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "population": { "type": "number" },
+        "parcelCounts": { "type": "object", "additionalProperties": { "type": "number" } },
+        "perDistrict": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["districtId"],
+            "properties": {
+              "districtId": { "type": "string" },
+              "population": { "type": "number" },
+              "parcelCounts": { "type": "object", "additionalProperties": { "type": "number" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "tier": { "enum": ["poor", "mid", "rich", "high_rich"] },
+    "parcelType": {
+      "enum": ["residential", "hotel", "offices", "corpo", "hospital", "clinic", "police", "military", "factory", "commerce", "mall", "restaurant", "coffee_shop"]
+    },
+    "idEntity": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "districtId": { "type": "string" },
+        "placeholder": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "namingMeta": {
+      "type": "object",
+      "description": "added by the naming pass on the named version",
+      "required": ["theme", "namedAt"],
+      "properties": {
+        "theme": { "type": "string" },
+        "model": { "type": "string" },
+        "namedAt": { "type": "string" }
+      }
+    }
+  }
+}

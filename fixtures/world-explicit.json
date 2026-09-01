@@ -1,0 +1,12 @@
+{
+  "meta": { "seed": 7, "generator": "fixture" },
+  "districts": [
+    { "id": "d0", "kind": "mixed", "tier": "mid", "placeholder": "District 1" },
+    { "id": "d1", "kind": "industrial", "tier": "poor", "placeholder": "District 2" }
+  ],
+  "parcels": [
+    { "id": "p0", "districtId": "d0", "type": "restaurant", "tier": "mid", "placeholder": "Restaurant 1" },
+    { "id": "p1", "districtId": "d1", "type": "factory", "tier": "poor", "placeholder": "Factory 1" },
+    { "id": "p2", "districtId": "d1", "type": "residential", "tier": "poor" }
+  ]
+}

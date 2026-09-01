@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urbe/naming/params",
+  "title": "Run parameters for the naming and typing passes",
+  "type": "object",
+  "required": ["theme"],
+  "properties": {
+    "theme": { "type": "string", "minLength": 1, "description": "world description prompt: dystopian, modern, 1950 industrial, egyptian, medieval, anything" },
+    "model": { "type": "string" },
+    "ranges": {
+      "type": "object",
+      "description": "typing pass only: min and max types per category, never exact quotas",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["min", "max"],
+        "properties": {
+          "min": { "type": "integer", "minimum": 0 },
+          "max": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

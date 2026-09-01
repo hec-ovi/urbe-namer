@@ -1,0 +1,2185 @@
+{
+  "meta": {
+    "version": "0.2.0",
+    "seed": "fixture-large",
+    "units": "meters"
+  },
+  "districts": [
+    {
+      "id": "d0",
+      "kind": "downtown",
+      "tier": "high_rich",
+      "maxFloors": 40
+    },
+    {
+      "id": "d1",
+      "kind": "commercial",
+      "tier": "rich",
+      "maxFloors": 12
+    },
+    {
+      "id": "d2",
+      "kind": "industrial",
+      "tier": "poor",
+      "maxFloors": 12
+    },
+    {
+      "id": "d3",
+      "kind": "residential",
+      "tier": "mid",
+      "maxFloors": 12
+    },
+    {
+      "id": "d4",
+      "kind": "residential",
+      "tier": "poor",
+      "maxFloors": 12
+    },
+    {
+      "id": "d5",
+      "kind": "mixed",
+      "tier": "mid",
+      "maxFloors": 12
+    }
+  ],
+  "parcels": [
+    {
+      "id": "p0",
+      "districtId": "d0",
+      "type": "hotel",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p1",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p2",
+      "districtId": "d0",
+      "type": "mall",
+      "tier": "rich"
+    },
+    {
+      "id": "p3",
+      "districtId": "d0",
+      "type": "corpo",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p4",
+      "districtId": "d0",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p5",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p6",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p7",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p8",
+      "districtId": "d0",
+      "type": "mall",
+      "tier": "mid"
+    },
+    {
+      "id": "p9",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p10",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p11",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p12",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p13",
+      "districtId": "d0",
+      "type": "restaurant",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p14",
+      "districtId": "d0",
+      "type": "mall",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p15",
+      "districtId": "d0",
+      "type": "offices",
+      "tier": "poor"
+    },
+    {
+      "id": "p16",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p17",
+      "districtId": "d0",
+      "type": "offices",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p18",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p19",
+      "districtId": "d0",
+      "type": "coffee_shop",
+      "tier": "rich"
+    },
+    {
+      "id": "p20",
+      "districtId": "d0",
+      "type": "mall",
+      "tier": "mid"
+    },
+    {
+      "id": "p21",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p22",
+      "districtId": "d0",
+      "type": "offices",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p23",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p24",
+      "districtId": "d0",
+      "type": "mall",
+      "tier": "rich"
+    },
+    {
+      "id": "p25",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p26",
+      "districtId": "d0",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p27",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p28",
+      "districtId": "d0",
+      "type": "coffee_shop",
+      "tier": "mid"
+    },
+    {
+      "id": "p29",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p30",
+      "districtId": "d0",
+      "type": "corpo",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p31",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p32",
+      "districtId": "d0",
+      "type": "hotel",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p33",
+      "districtId": "d0",
+      "type": "hotel",
+      "tier": "poor"
+    },
+    {
+      "id": "p34",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p35",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p36",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p37",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p38",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p39",
+      "districtId": "d0",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p40",
+      "districtId": "d0",
+      "type": "factory",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p41",
+      "districtId": "d0",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p42",
+      "districtId": "d0",
+      "type": "factory",
+      "tier": "mid"
+    },
+    {
+      "id": "p43",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p44",
+      "districtId": "d0",
+      "type": "residential",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p45",
+      "districtId": "d0",
+      "type": "factory",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p46",
+      "districtId": "d0",
+      "type": "restaurant",
+      "tier": "rich"
+    },
+    {
+      "id": "p47",
+      "districtId": "d0",
+      "type": "offices",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p48",
+      "districtId": "d0",
+      "type": "hotel",
+      "tier": "high_rich"
+    },
+    {
+      "id": "p49",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p50",
+      "districtId": "d1",
+      "type": "coffee_shop",
+      "tier": "rich"
+    },
+    {
+      "id": "p51",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p52",
+      "districtId": "d1",
+      "type": "hospital",
+      "tier": "mid"
+    },
+    {
+      "id": "p53",
+      "districtId": "d1",
+      "type": "commerce",
+      "tier": "rich"
+    },
+    {
+      "id": "p54",
+      "districtId": "d1",
+      "type": "restaurant",
+      "tier": "poor"
+    },
+    {
+      "id": "p55",
+      "districtId": "d1",
+      "type": "restaurant",
+      "tier": "mid"
+    },
+    {
+      "id": "p56",
+      "districtId": "d1",
+      "type": "military",
+      "tier": "rich"
+    },
+    {
+      "id": "p57",
+      "districtId": "d1",
+      "type": "factory",
+      "tier": "mid"
+    },
+    {
+      "id": "p58",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p59",
+      "districtId": "d1",
+      "type": "police",
+      "tier": "mid"
+    },
+    {
+      "id": "p60",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p61",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p62",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p63",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p64",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p65",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p66",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p67",
+      "districtId": "d1",
+      "type": "mall",
+      "tier": "rich"
+    },
+    {
+      "id": "p68",
+      "districtId": "d1",
+      "type": "offices",
+      "tier": "rich"
+    },
+    {
+      "id": "p69",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p70",
+      "districtId": "d1",
+      "type": "mall",
+      "tier": "mid"
+    },
+    {
+      "id": "p71",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p72",
+      "districtId": "d1",
+      "type": "coffee_shop",
+      "tier": "rich"
+    },
+    {
+      "id": "p73",
+      "districtId": "d1",
+      "type": "factory",
+      "tier": "rich"
+    },
+    {
+      "id": "p74",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p75",
+      "districtId": "d1",
+      "type": "coffee_shop",
+      "tier": "mid"
+    },
+    {
+      "id": "p76",
+      "districtId": "d1",
+      "type": "corpo",
+      "tier": "rich"
+    },
+    {
+      "id": "p77",
+      "districtId": "d1",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p78",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p79",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p80",
+      "districtId": "d1",
+      "type": "mall",
+      "tier": "mid"
+    },
+    {
+      "id": "p81",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p82",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p83",
+      "districtId": "d1",
+      "type": "factory",
+      "tier": "rich"
+    },
+    {
+      "id": "p84",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p85",
+      "districtId": "d1",
+      "type": "offices",
+      "tier": "rich"
+    },
+    {
+      "id": "p86",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p87",
+      "districtId": "d1",
+      "type": "factory",
+      "tier": "rich"
+    },
+    {
+      "id": "p88",
+      "districtId": "d1",
+      "type": "offices",
+      "tier": "poor"
+    },
+    {
+      "id": "p89",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p90",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "rich"
+    },
+    {
+      "id": "p91",
+      "districtId": "d1",
+      "type": "factory",
+      "tier": "mid"
+    },
+    {
+      "id": "p92",
+      "districtId": "d1",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p93",
+      "districtId": "d1",
+      "type": "factory",
+      "tier": "mid"
+    },
+    {
+      "id": "p94",
+      "districtId": "d1",
+      "type": "corpo",
+      "tier": "poor"
+    },
+    {
+      "id": "p95",
+      "districtId": "d1",
+      "type": "coffee_shop",
+      "tier": "rich"
+    },
+    {
+      "id": "p96",
+      "districtId": "d1",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p97",
+      "districtId": "d1",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p98",
+      "districtId": "d2",
+      "type": "corpo",
+      "tier": "poor"
+    },
+    {
+      "id": "p99",
+      "districtId": "d2",
+      "type": "police",
+      "tier": "poor"
+    },
+    {
+      "id": "p100",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p101",
+      "districtId": "d2",
+      "type": "coffee_shop",
+      "tier": "poor"
+    },
+    {
+      "id": "p102",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p103",
+      "districtId": "d2",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p104",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p105",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p106",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p107",
+      "districtId": "d2",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p108",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p109",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p110",
+      "districtId": "d2",
+      "type": "corpo",
+      "tier": "poor"
+    },
+    {
+      "id": "p111",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p112",
+      "districtId": "d2",
+      "type": "restaurant",
+      "tier": "poor"
+    },
+    {
+      "id": "p113",
+      "districtId": "d2",
+      "type": "coffee_shop",
+      "tier": "poor"
+    },
+    {
+      "id": "p114",
+      "districtId": "d2",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p115",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p116",
+      "districtId": "d2",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p117",
+      "districtId": "d2",
+      "type": "corpo",
+      "tier": "poor"
+    },
+    {
+      "id": "p118",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p119",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p120",
+      "districtId": "d2",
+      "type": "clinic",
+      "tier": "poor"
+    },
+    {
+      "id": "p121",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p122",
+      "districtId": "d2",
+      "type": "hotel",
+      "tier": "poor"
+    },
+    {
+      "id": "p123",
+      "districtId": "d2",
+      "type": "restaurant",
+      "tier": "poor"
+    },
+    {
+      "id": "p124",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p125",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p126",
+      "districtId": "d2",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p127",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p128",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p129",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p130",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p131",
+      "districtId": "d2",
+      "type": "hospital",
+      "tier": "poor"
+    },
+    {
+      "id": "p132",
+      "districtId": "d2",
+      "type": "corpo",
+      "tier": "poor"
+    },
+    {
+      "id": "p133",
+      "districtId": "d2",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p134",
+      "districtId": "d2",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p135",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p136",
+      "districtId": "d2",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p137",
+      "districtId": "d2",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p138",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p139",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p140",
+      "districtId": "d2",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p141",
+      "districtId": "d2",
+      "type": "restaurant",
+      "tier": "poor"
+    },
+    {
+      "id": "p142",
+      "districtId": "d2",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p143",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p144",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p145",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p146",
+      "districtId": "d2",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p147",
+      "districtId": "d2",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p148",
+      "districtId": "d3",
+      "type": "hotel",
+      "tier": "mid"
+    },
+    {
+      "id": "p149",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p150",
+      "districtId": "d3",
+      "type": "hotel",
+      "tier": "mid"
+    },
+    {
+      "id": "p151",
+      "districtId": "d3",
+      "type": "coffee_shop",
+      "tier": "mid"
+    },
+    {
+      "id": "p152",
+      "districtId": "d3",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p153",
+      "districtId": "d3",
+      "type": "restaurant",
+      "tier": "mid"
+    },
+    {
+      "id": "p154",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p155",
+      "districtId": "d3",
+      "type": "hotel",
+      "tier": "poor"
+    },
+    {
+      "id": "p156",
+      "districtId": "d3",
+      "type": "offices",
+      "tier": "poor"
+    },
+    {
+      "id": "p157",
+      "districtId": "d3",
+      "type": "corpo",
+      "tier": "mid"
+    },
+    {
+      "id": "p158",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p159",
+      "districtId": "d3",
+      "type": "hotel",
+      "tier": "mid"
+    },
+    {
+      "id": "p160",
+      "districtId": "d3",
+      "type": "restaurant",
+      "tier": "poor"
+    },
+    {
+      "id": "p161",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p162",
+      "districtId": "d3",
+      "type": "mall",
+      "tier": "mid"
+    },
+    {
+      "id": "p163",
+      "districtId": "d3",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p164",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p165",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p166",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p167",
+      "districtId": "d3",
+      "type": "military",
+      "tier": "poor"
+    },
+    {
+      "id": "p168",
+      "districtId": "d3",
+      "type": "corpo",
+      "tier": "mid"
+    },
+    {
+      "id": "p169",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p170",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p171",
+      "districtId": "d3",
+      "type": "factory",
+      "tier": "mid"
+    },
+    {
+      "id": "p172",
+      "districtId": "d3",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p173",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p174",
+      "districtId": "d3",
+      "type": "mall",
+      "tier": "mid"
+    },
+    {
+      "id": "p175",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p176",
+      "districtId": "d3",
+      "type": "restaurant",
+      "tier": "mid"
+    },
+    {
+      "id": "p177",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p178",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p179",
+      "districtId": "d3",
+      "type": "offices",
+      "tier": "mid"
+    },
+    {
+      "id": "p180",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p181",
+      "districtId": "d3",
+      "type": "hospital",
+      "tier": "mid"
+    },
+    {
+      "id": "p182",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p183",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p184",
+      "districtId": "d3",
+      "type": "offices",
+      "tier": "poor"
+    },
+    {
+      "id": "p185",
+      "districtId": "d3",
+      "type": "clinic",
+      "tier": "poor"
+    },
+    {
+      "id": "p186",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p187",
+      "districtId": "d3",
+      "type": "hospital",
+      "tier": "poor"
+    },
+    {
+      "id": "p188",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p189",
+      "districtId": "d3",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p190",
+      "districtId": "d3",
+      "type": "factory",
+      "tier": "mid"
+    },
+    {
+      "id": "p191",
+      "districtId": "d3",
+      "type": "restaurant",
+      "tier": "mid"
+    },
+    {
+      "id": "p192",
+      "districtId": "d3",
+      "type": "hospital",
+      "tier": "mid"
+    },
+    {
+      "id": "p193",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p194",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p195",
+      "districtId": "d3",
+      "type": "coffee_shop",
+      "tier": "mid"
+    },
+    {
+      "id": "p196",
+      "districtId": "d3",
+      "type": "offices",
+      "tier": "poor"
+    },
+    {
+      "id": "p197",
+      "districtId": "d3",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p198",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p199",
+      "districtId": "d3",
+      "type": "coffee_shop",
+      "tier": "mid"
+    },
+    {
+      "id": "p200",
+      "districtId": "d3",
+      "type": "corpo",
+      "tier": "mid"
+    },
+    {
+      "id": "p201",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p202",
+      "districtId": "d3",
+      "type": "factory",
+      "tier": "mid"
+    },
+    {
+      "id": "p203",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p204",
+      "districtId": "d3",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p205",
+      "districtId": "d3",
+      "type": "corpo",
+      "tier": "poor"
+    },
+    {
+      "id": "p206",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p207",
+      "districtId": "d4",
+      "type": "corpo",
+      "tier": "poor"
+    },
+    {
+      "id": "p208",
+      "districtId": "d4",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p209",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p210",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p211",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p212",
+      "districtId": "d4",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p213",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p214",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p215",
+      "districtId": "d4",
+      "type": "corpo",
+      "tier": "poor"
+    },
+    {
+      "id": "p216",
+      "districtId": "d4",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p217",
+      "districtId": "d4",
+      "type": "offices",
+      "tier": "poor"
+    },
+    {
+      "id": "p218",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p219",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p220",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p221",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p222",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p223",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p224",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p225",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p226",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p227",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p228",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p229",
+      "districtId": "d4",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p230",
+      "districtId": "d4",
+      "type": "hotel",
+      "tier": "poor"
+    },
+    {
+      "id": "p231",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p232",
+      "districtId": "d4",
+      "type": "clinic",
+      "tier": "poor"
+    },
+    {
+      "id": "p233",
+      "districtId": "d4",
+      "type": "hotel",
+      "tier": "poor"
+    },
+    {
+      "id": "p234",
+      "districtId": "d4",
+      "type": "hotel",
+      "tier": "poor"
+    },
+    {
+      "id": "p235",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p236",
+      "districtId": "d4",
+      "type": "coffee_shop",
+      "tier": "poor"
+    },
+    {
+      "id": "p237",
+      "districtId": "d4",
+      "type": "hotel",
+      "tier": "poor"
+    },
+    {
+      "id": "p238",
+      "districtId": "d4",
+      "type": "restaurant",
+      "tier": "poor"
+    },
+    {
+      "id": "p239",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p240",
+      "districtId": "d4",
+      "type": "military",
+      "tier": "poor"
+    },
+    {
+      "id": "p241",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p242",
+      "districtId": "d4",
+      "type": "hotel",
+      "tier": "poor"
+    },
+    {
+      "id": "p243",
+      "districtId": "d4",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p244",
+      "districtId": "d4",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p245",
+      "districtId": "d4",
+      "type": "factory",
+      "tier": "poor"
+    },
+    {
+      "id": "p246",
+      "districtId": "d4",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p247",
+      "districtId": "d4",
+      "type": "coffee_shop",
+      "tier": "poor"
+    },
+    {
+      "id": "p248",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p249",
+      "districtId": "d5",
+      "type": "offices",
+      "tier": "mid"
+    },
+    {
+      "id": "p250",
+      "districtId": "d5",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p251",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p252",
+      "districtId": "d5",
+      "type": "coffee_shop",
+      "tier": "poor"
+    },
+    {
+      "id": "p253",
+      "districtId": "d5",
+      "type": "mall",
+      "tier": "poor"
+    },
+    {
+      "id": "p254",
+      "districtId": "d5",
+      "type": "corpo",
+      "tier": "mid"
+    },
+    {
+      "id": "p255",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p256",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p257",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p258",
+      "districtId": "d5",
+      "type": "offices",
+      "tier": "mid"
+    },
+    {
+      "id": "p259",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p260",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p261",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p262",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p263",
+      "districtId": "d5",
+      "type": "hospital",
+      "tier": "mid"
+    },
+    {
+      "id": "p264",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p265",
+      "districtId": "d5",
+      "type": "coffee_shop",
+      "tier": "poor"
+    },
+    {
+      "id": "p266",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p267",
+      "districtId": "d5",
+      "type": "corpo",
+      "tier": "poor"
+    },
+    {
+      "id": "p268",
+      "districtId": "d5",
+      "type": "hotel",
+      "tier": "mid"
+    },
+    {
+      "id": "p269",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p270",
+      "districtId": "d5",
+      "type": "corpo",
+      "tier": "mid"
+    },
+    {
+      "id": "p271",
+      "districtId": "d5",
+      "type": "hotel",
+      "tier": "poor"
+    },
+    {
+      "id": "p272",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "poor"
+    },
+    {
+      "id": "p273",
+      "districtId": "d5",
+      "type": "corpo",
+      "tier": "mid"
+    },
+    {
+      "id": "p274",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p275",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p276",
+      "districtId": "d5",
+      "type": "hospital",
+      "tier": "mid"
+    },
+    {
+      "id": "p277",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p278",
+      "districtId": "d5",
+      "type": "restaurant",
+      "tier": "mid"
+    },
+    {
+      "id": "p279",
+      "districtId": "d5",
+      "type": "hotel",
+      "tier": "mid"
+    },
+    {
+      "id": "p280",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p281",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p282",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p283",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p284",
+      "districtId": "d5",
+      "type": "commerce",
+      "tier": "mid"
+    },
+    {
+      "id": "p285",
+      "districtId": "d5",
+      "type": "commerce",
+      "tier": "poor"
+    },
+    {
+      "id": "p286",
+      "districtId": "d5",
+      "type": "mall",
+      "tier": "mid"
+    },
+    {
+      "id": "p287",
+      "districtId": "d5",
+      "type": "factory",
+      "tier": "mid"
+    },
+    {
+      "id": "p288",
+      "districtId": "d5",
+      "type": "residential",
+      "tier": "mid"
+    },
+    {
+      "id": "p289",
+      "districtId": "d5",
+      "type": "offices",
+      "tier": "mid"
+    }
+  ],
+  "transit": {
+    "busStops": [
+      {
+        "id": "bs0_0",
+        "edgeId": "e00",
+        "districtId": "d1"
+      },
+      {
+        "id": "bs0_1",
+        "edgeId": "e01",
+        "districtId": "d2"
+      },
+      {
+        "id": "bs0_2",
+        "edgeId": "e02",
+        "districtId": "d3"
+      },
+      {
+        "id": "bs0_3",
+        "edgeId": "e03",
+        "districtId": "d5"
+      },
+      {
+        "id": "bs1_0",
+        "edgeId": "e10",
+        "districtId": "d0"
+      },
+      {
+        "id": "bs1_1",
+        "edgeId": "e11",
+        "districtId": "d1"
+      },
+      {
+        "id": "bs1_2",
+        "edgeId": "e12",
+        "districtId": "d2"
+      },
+      {
+        "id": "bs1_3",
+        "edgeId": "e13",
+        "districtId": "d3"
+      },
+      {
+        "id": "bs1_4",
+        "edgeId": "e14",
+        "districtId": "d5"
+      },
+      {
+        "id": "bs2_0",
+        "edgeId": "e20",
+        "districtId": "d0"
+      },
+      {
+        "id": "bs2_1",
+        "edgeId": "e21",
+        "districtId": "d1"
+      },
+      {
+        "id": "bs2_2",
+        "edgeId": "e22",
+        "districtId": "d3"
+      },
+      {
+        "id": "bs2_3",
+        "edgeId": "e23",
+        "districtId": "d4"
+      },
+      {
+        "id": "bs2_4",
+        "edgeId": "e24",
+        "districtId": "d5"
+      },
+      {
+        "id": "bs3_0",
+        "edgeId": "e30",
+        "districtId": "d0"
+      },
+      {
+        "id": "bs3_1",
+        "edgeId": "e31",
+        "districtId": "d1"
+      },
+      {
+        "id": "bs3_2",
+        "edgeId": "e32",
+        "districtId": "d2"
+      },
+      {
+        "id": "bs3_3",
+        "edgeId": "e33",
+        "districtId": "d3"
+      },
+      {
+        "id": "bs3_4",
+        "edgeId": "e34",
+        "districtId": "d4"
+      },
+      {
+        "id": "bs3_5",
+        "edgeId": "e35",
+        "districtId": "d5"
+      }
+    ],
+    "busRoutes": [
+      {
+        "id": "br0",
+        "stopIds": [
+          "bs0_0",
+          "bs0_1",
+          "bs0_2",
+          "bs0_3"
+        ],
+        "edgeIds": []
+      },
+      {
+        "id": "br1",
+        "stopIds": [
+          "bs1_0",
+          "bs1_1",
+          "bs1_2",
+          "bs1_3",
+          "bs1_4"
+        ],
+        "edgeIds": []
+      },
+      {
+        "id": "br2",
+        "stopIds": [
+          "bs2_0",
+          "bs2_1",
+          "bs2_2",
+          "bs2_3",
+          "bs2_4"
+        ],
+        "edgeIds": []
+      },
+      {
+        "id": "br3",
+        "stopIds": [
+          "bs3_0",
+          "bs3_1",
+          "bs3_2",
+          "bs3_3",
+          "bs3_4",
+          "bs3_5"
+        ],
+        "edgeIds": []
+      }
+    ],
+    "trainStations": [
+      {
+        "id": "ts0",
+        "districtId": "d3",
+        "entrances": []
+      },
+      {
+        "id": "ts1",
+        "districtId": "d5",
+        "entrances": []
+      },
+      {
+        "id": "ts2",
+        "districtId": "d2",
+        "entrances": []
+      },
+      {
+        "id": "ts3",
+        "districtId": "d3",
+        "entrances": []
+      },
+      {
+        "id": "ts4",
+        "districtId": "d0",
+        "entrances": []
+      },
+      {
+        "id": "ts5",
+        "districtId": "d1",
+        "entrances": []
+      },
+      {
+        "id": "ts6",
+        "districtId": "d4",
+        "entrances": []
+      },
+      {
+        "id": "ts7",
+        "districtId": "d5",
+        "entrances": []
+      }
+    ],
+    "trainLines": [
+      {
+        "id": "tl0",
+        "stationIds": [
+          "ts0",
+          "ts1"
+        ],
+        "underground": false
+      },
+      {
+        "id": "tl1",
+        "stationIds": [
+          "ts2",
+          "ts3"
+        ],
+        "underground": false
+      },
+      {
+        "id": "tl2",
+        "stationIds": [
+          "ts4",
+          "ts5",
+          "ts6",
+          "ts7"
+        ],
+        "underground": false
+      }
+    ],
+    "subwayStations": [
+      {
+        "id": "ss8",
+        "districtId": "d4",
+        "entrances": []
+      },
+      {
+        "id": "ss9",
+        "districtId": "d5",
+        "entrances": []
+      },
+      {
+        "id": "ss10",
+        "districtId": "d3",
+        "entrances": []
+      },
+      {
+        "id": "ss11",
+        "districtId": "d4",
+        "entrances": []
+      },
+      {
+        "id": "ss12",
+        "districtId": "d2",
+        "entrances": []
+      },
+      {
+        "id": "ss13",
+        "districtId": "d4",
+        "entrances": []
+      }
+    ],
+    "subwayLines": [
+      {
+        "id": "sl0",
+        "stationIds": [
+          "ss8",
+          "ss9"
+        ],
+        "underground": true
+      },
+      {
+        "id": "sl1",
+        "stationIds": [
+          "ss10",
+          "ss11"
+        ],
+        "underground": true
+      },
+      {
+        "id": "sl2",
+        "stationIds": [
+          "ss12",
+          "ss13"
+        ],
+        "underground": true
+      }
+    ]
+  },
+  "stats": {
+    "population": 42951,
+    "parcelCounts": {
+      "hotel": 17,
+      "residential": 137,
+      "mall": 21,
+      "corpo": 18,
+      "restaurant": 13,
+      "offices": 15,
+      "coffee_shop": 15,
+      "commerce": 14,
+      "factory": 25,
+      "hospital": 7,
+      "military": 3,
+      "police": 2,
+      "clinic": 3
+    },
+    "perDistrict": [
+      {
+        "districtId": "d0",
+        "population": 7070,
+        "parcelCounts": {
+          "hotel": 4,
+          "residential": 23,
+          "mall": 6,
+          "corpo": 2,
+          "restaurant": 2,
+          "offices": 4,
+          "coffee_shop": 2,
+          "commerce": 1,
+          "factory": 5
+        }
+      },
+      {
+        "districtId": "d1",
+        "population": 6786,
+        "parcelCounts": {
+          "residential": 22,
+          "coffee_shop": 4,
+          "hospital": 1,
+          "commerce": 3,
+          "restaurant": 2,
+          "military": 1,
+          "factory": 7,
+          "police": 1,
+          "mall": 3,
+          "offices": 3,
+          "corpo": 2
+        }
+      },
+      {
+        "districtId": "d2",
+        "population": 9392,
+        "parcelCounts": {
+          "corpo": 4,
+          "police": 1,
+          "residential": 25,
+          "coffee_shop": 2,
+          "mall": 4,
+          "commerce": 5,
+          "restaurant": 3,
+          "clinic": 1,
+          "hotel": 1,
+          "factory": 3,
+          "hospital": 1
+        }
+      },
+      {
+        "districtId": "d3",
+        "population": 7473,
+        "parcelCounts": {
+          "hotel": 4,
+          "residential": 24,
+          "coffee_shop": 3,
+          "factory": 6,
+          "restaurant": 4,
+          "offices": 4,
+          "corpo": 4,
+          "mall": 3,
+          "military": 1,
+          "hospital": 3,
+          "clinic": 1,
+          "commerce": 1
+        }
+      },
+      {
+        "districtId": "d4",
+        "population": 5809,
+        "parcelCounts": {
+          "residential": 22,
+          "corpo": 2,
+          "factory": 3,
+          "mall": 3,
+          "offices": 1,
+          "commerce": 1,
+          "hotel": 5,
+          "clinic": 1,
+          "coffee_shop": 2,
+          "restaurant": 1,
+          "military": 1
+        }
+      },
+      {
+        "districtId": "d5",
+        "population": 6421,
+        "parcelCounts": {
+          "residential": 21,
+          "offices": 3,
+          "commerce": 3,
+          "coffee_shop": 2,
+          "mall": 2,
+          "corpo": 4,
+          "hospital": 2,
+          "hotel": 3,
+          "restaurant": 1,
+          "factory": 1
+        }
+      }
+    ]
+  }
+}

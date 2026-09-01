@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urbe/naming/npc-types",
+  "title": "Dynamic NPC type set produced by the typing pass",
+  "type": "object",
+  "required": ["meta", "types"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["theme", "worldSeed", "createdAt"],
+      "properties": {
+        "theme": { "type": "string" },
+        "worldSeed": { "type": ["string", "integer"] },
+        "model": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type", "label", "category", "boilerplate", "grounding", "weight"],
+        "properties": {
+          "type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "unique machine string, e.g. dock_smuggler" },
+          "label": { "type": "string" },
+          "category": { "type": "string", "enum": ["resident", "worker", "vendor", "authority", "transit", "street"] },
+          "boilerplate": { "type": "string", "minLength": 1, "description": "prompt boilerplate consumers use to instantiate an NPC of this type" },
+          "examples": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "short themed instantiation sketches for downstream few-shot use"
+          },
+          "grounding": {
+            "type": "object",
+            "description": "what in the named world this type is anchored to",
+            "properties": {
+              "districts": { "type": "array", "items": { "type": "string" }, "description": "district names from the named world" },
+              "parcelTypes": {
+                "type": "array",
+                "items": { "enum": ["residential", "hotel", "offices", "corpo", "hospital", "clinic", "police", "military", "factory", "commerce", "mall", "restaurant", "coffee_shop"] }
+              },
+              "tiers": { "type": "array", "items": { "enum": ["poor", "mid", "rich", "high_rich"] } }
+            }
+          },
+          "weight": { "type": "number", "exclusiveMinimum": 0, "description": "relative demographic weight within its category; consumers normalize" }
+        }
+      }
+    }
+  }
+}
