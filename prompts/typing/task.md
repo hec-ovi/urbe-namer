@@ -26,6 +26,6 @@ Create the NPC types for this world. Read the summary first: which districts exi
 - grounding: the districts (by name), parcel types and tiers this type is anchored to
 - weight: relative frequency within its category, consistent with the demographics above
 
-Also create the personal name pool for this world: given names and family names ordinary people here would carry. Aim for enough breadth that a crowd feels varied; a few dozen of each is a healthy floor, more if the theme's cultures ask for it.
+Also create the personal name pool for this world: given names and family names ordinary people here would carry. Sort the given names into three lists by the gender they read as here: male, female, neutral. A name belongs to exactly one list; neutral is for names anyone in this world carries, and if the theme's names are not gendered at all, every given name goes there. Aim for enough breadth that a crowd feels varied; a few dozen given names in total and a few dozen family names are a healthy floor, more if the theme's cultures ask for it.
 
-Return JSON: {"types": [...], "namePool": {"given": [...], "family": [...]}}
+Return JSON: {"types": [...], "namePool": {"givenByGender": {"male": [...], "female": [...], "neutral": [...]}, "family": [...]}}

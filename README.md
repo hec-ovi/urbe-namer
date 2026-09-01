@@ -25,7 +25,7 @@ Flags: `--model <id>`, `--out <file>`, and for the typing pass `--ranges '<json>
 ## Out
 
 - **A named world**: the input document untouched except that every nameable gains a `name`, with a `meta.naming` record of theme, model and timestamp. It is saved alongside the placeholder version, never over it. Names are unique case-insensitively inside their namespace, and themed chains stay possible through branch-qualified names.
-- **An NPC type set** (`schema/npc-types.schema.json`): each type has a machine string (`dock_smuggler`), a display label, a category (resident, worker, vendor, authority, transit, street), a prompt boilerplate consumers instantiate from, optional example sketches, a demographic weight, and grounding that references only districts, parcel types and tiers the world actually contains. The set also carries a themed name pool of at least 20 distinct given and family names.
+- **An NPC type set** (`schema/npc-types.schema.json`): each type has a machine string (`dock_smuggler`), a display label, a category (resident, worker, vendor, authority, transit, street), a prompt boilerplate consumers instantiate from, optional example sketches, a demographic weight, and grounding that references only districts, parcel types and tiers the world actually contains. The set also carries a themed name pool: at least 20 distinct given names, both as a flat list and tagged male, female or neutral so a consumer can match a name to a body, plus at least 20 family names.
 
 ## How it works
 

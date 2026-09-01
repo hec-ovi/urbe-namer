@@ -8,9 +8,24 @@
     "namePool": {
       "type": "object",
       "description": "themed personal name pool; names repeat across NPCs by design. Family entries may be epithets or patronymics when the theme has no family names.",
-      "required": ["given", "family"],
+      "required": ["given", "givenByGender", "family"],
       "properties": {
-        "given": { "type": "array", "minItems": 20, "items": { "type": "string", "minLength": 1 } },
+        "given": {
+          "type": "array",
+          "minItems": 20,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "every given name, flat: the union of givenByGender in male, female, neutral order"
+        },
+        "givenByGender": {
+          "type": "object",
+          "description": "the same given names tagged, so a consumer can match a name to a body. Each name sits in exactly one list; neutral holds names anyone here carries, and a theme with no gendered names puts every given name there.",
+          "required": ["male", "female", "neutral"],
+          "properties": {
+            "male": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+            "female": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+            "neutral": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+          }
+        },
         "family": { "type": "array", "minItems": 20, "items": { "type": "string", "minLength": 1 } }
       }
     },

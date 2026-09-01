@@ -6,7 +6,7 @@ import { NamingPass, type NamingPassOptions } from "./passes/naming.js";
 import { TypingPass, type PopulationStats, type TypingPassOptions } from "./passes/typing.js";
 
 export type { ChatModel, ChatRequest } from "./llm/model.js";
-export type { NamePool, Nameable, NpcType, NpcTypeSet, RunParams, WorldState } from "./types.js";
+export type { NameGender, NamePool, Nameable, NpcType, NpcTypeSet, RunParams, WorldState } from "./types.js";
 export type { PopulationStats } from "./passes/typing.js";
 export { NamingError, type NamingErrorCode } from "./errors.js";
 export { OpenAICompatModel } from "./llm/openai-compat.js";

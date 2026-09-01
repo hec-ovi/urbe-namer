@@ -79,7 +79,7 @@ export class TypingPass {
     });
 
     let types: NpcType[] = [];
-    let namePool: NamePool = { given: [], family: [] };
+    let namePool: NamePool = emptyPool();
     let problems: string[] = [];
     for (let round = 0; round <= this.maxRepairRounds; round++) {
       if (round > 0) {
@@ -88,7 +88,7 @@ export class TypingPass {
           summary,
           ranges: rangesText,
           problems: problems.join("\n"),
-          previous: JSON.stringify({ types, namePool }, null, 2),
+          previous: JSON.stringify({ types, namePool: modelSide(namePool) }, null, 2),
         });
       }
       const raw = await this.model.completeJSON({
@@ -222,29 +222,53 @@ function extractTypes(raw: unknown): NpcType[] {
   return list as NpcType[];
 }
 
-/** Trims, drops empties and dedupes case-insensitively; deterministic harness-side cleanup. */
+function emptyPool(): NamePool {
+  return { given: [], givenByGender: { male: [], female: [], neutral: [] }, family: [] };
+}
+
+/** What the model owns: the flat `given` list is derived here, so it never comes back edited. */
+function modelSide(pool: NamePool): Pick<NamePool, "givenByGender" | "family"> {
+  return { givenByGender: pool.givenByGender, family: pool.family };
+}
+
+/** Trims, drops empties and dedupes case-insensitively; deterministic harness-side cleanup.
+ *  Given names dedupe across the three gender lists, so a name lands in exactly one, and the
+ *  flat `given` list is their union: the tags and the flat list can never drift apart. */
 function extractPool(raw: unknown): NamePool {
   const container = ((raw ?? {}) as Record<string, unknown>).namePool as Record<string, unknown> | undefined;
-  const clean = (value: unknown): string[] => {
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const item of Array.isArray(value) ? value : []) {
-      if (typeof item !== "string") continue;
-      const name = item.trim();
-      const key = name.toLowerCase();
-      if (name === "" || seen.has(key)) continue;
-      seen.add(key);
-      out.push(name);
-    }
-    return out;
+  const tagged = (container?.givenByGender ?? {}) as Record<string, unknown>;
+  const givenSeen = new Set<string>();
+  const givenByGender = {
+    male: clean(tagged.male, givenSeen),
+    female: clean(tagged.female, givenSeen),
+    neutral: clean(tagged.neutral, givenSeen),
   };
-  return { given: clean(container?.given), family: clean(container?.family) };
+  return {
+    given: [...givenByGender.male, ...givenByGender.female, ...givenByGender.neutral],
+    givenByGender,
+    family: clean(container?.family, new Set()),
+  };
+}
+
+function clean(value: unknown, seen: Set<string>): string[] {
+  const out: string[] = [];
+  for (const item of Array.isArray(value) ? value : []) {
+    if (typeof item !== "string") continue;
+    const name = item.trim();
+    const key = name.toLowerCase();
+    if (name === "" || seen.has(key)) continue;
+    seen.add(key);
+    out.push(name);
+  }
+  return out;
 }
 
 function validatePool(pool: NamePool): string[] {
   const problems: string[] = [];
   if (pool.given.length < MIN_POOL) {
-    problems.push(`pool: ${pool.given.length} distinct given names, need at least ${MIN_POOL}`);
+    problems.push(
+      `pool: ${pool.given.length} distinct given names across male, female and neutral, need at least ${MIN_POOL} in total`,
+    );
   }
   if (pool.family.length < MIN_POOL) {
     problems.push(`pool: ${pool.family.length} distinct family names, need at least ${MIN_POOL}`);

@@ -70,10 +70,19 @@ export function typingOutputSchema(ground: {
       namePool: {
         type: "object",
         properties: {
-          given: { type: "array", items: { type: "string" } },
+          givenByGender: {
+            type: "object",
+            properties: {
+              male: { type: "array", items: { type: "string" } },
+              female: { type: "array", items: { type: "string" } },
+              neutral: { type: "array", items: { type: "string" } },
+            },
+            required: ["male", "female", "neutral"],
+            additionalProperties: false,
+          },
           family: { type: "array", items: { type: "string" } },
         },
-        required: ["given", "family"],
+        required: ["givenByGender", "family"],
         additionalProperties: false,
       },
     },

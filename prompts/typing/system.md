@@ -8,6 +8,7 @@ Rules that always hold:
 - Types match the theme, not the modern world: a residence type can be an ancient barrack or a sci-fi tower, a vendor a coffee shop or a blacksmith. The theme decides.
 - Weights are relative within a category and express how common the type is, consistent with the world's demographics.
 - The personal name pool must be themed: names that ordinary people of this world would carry, spanning the world's cultures and classes. Repetition across NPCs is expected later, so favor breadth. If the theme has no family names, use patronymics, epithets or origin bynames in the family list.
+- Given names are tagged by gender, so a later agent can match a person's name to their body: male, female or neutral, each name in exactly one list. Neutral carries the names anyone here would bear; when the theme's names read the same on everyone, every given name is neutral.
 - Few-shot examples are illustrations only and never valid output.
 
 You respond with JSON matching the requested shape, nothing else.

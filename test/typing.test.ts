@@ -43,9 +43,15 @@ const GOOD_TYPES: NpcType[] = [
   },
 ];
 
+const FAMILY = Array.from({ length: 25 }, (_, i) => `Family${i}`);
+
 const POOL = {
-  given: Array.from({ length: 25 }, (_, i) => `Given${i}`),
-  family: Array.from({ length: 25 }, (_, i) => `Family${i}`),
+  givenByGender: {
+    male: Array.from({ length: 10 }, (_, i) => `Male${i}`),
+    female: Array.from({ length: 10 }, (_, i) => `Female${i}`),
+    neutral: Array.from({ length: 5 }, (_, i) => `Neutral${i}`),
+  },
+  family: FAMILY,
 };
 
 const STATS: PopulationStats = {
@@ -73,9 +79,41 @@ describe("runTypingPass", () => {
     const set = await runTypingPass(namedWorld, PARAMS, STATS, model);
 
     expect(set.types.map((t) => t.type)).toContain("vat_worker");
-    expect(set.namePool.given.length).toBeGreaterThanOrEqual(20);
     expect(set.namePool.family.length).toBeGreaterThanOrEqual(20);
     expect(set.meta).toMatchObject({ theme: PARAMS.theme, worldSeed: "fixture-small", model: "fake-model" });
+  });
+
+  it("tags every given name by gender and keeps the flat list as their union", async () => {
+    const model = new FakeModel(() => ({ types: GOOD_TYPES, namePool: POOL }));
+    const { given, givenByGender } = (await runTypingPass(namedWorld, PARAMS, undefined, model)).namePool;
+
+    expect(Object.keys(givenByGender).sort()).toEqual(["female", "male", "neutral"]);
+    expect(given).toEqual([...givenByGender.male, ...givenByGender.female, ...givenByGender.neutral]);
+    expect(given.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it("accepts an all-neutral pool for a theme whose names carry no gender", async () => {
+    const neutral = Array.from({ length: 22 }, (_, i) => `Sun${i}`);
+    const model = new FakeModel(() => ({
+      types: GOOD_TYPES,
+      namePool: { givenByGender: { male: [], female: [], neutral }, family: FAMILY },
+    }));
+    const set = await runTypingPass(namedWorld, PARAMS, undefined, model);
+
+    expect(set.namePool.givenByGender.neutral).toEqual(neutral);
+    expect(set.namePool.given).toEqual(neutral);
+  });
+
+  it("throws COVERAGE_ERROR when the tagged lists hold under 20 distinct given names in total", async () => {
+    const model = new FakeModel(() => ({
+      types: GOOD_TYPES,
+      namePool: {
+        givenByGender: { male: POOL.givenByGender.male, female: POOL.givenByGender.female.slice(0, 9), neutral: [] },
+        family: FAMILY,
+      },
+    }));
+    await expect(runTypingPass(namedWorld, PARAMS, undefined, model))
+      .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
   });
 
   it("repairs an invalid first answer by feeding the problems back", async () => {

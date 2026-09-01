@@ -20,4 +20,4 @@ Your previous output:
 
 Return the corrected complete set: fix exactly what the problems name, keep everything that was fine, and stay grounded in the world summary above.
 
-Return JSON: {"types": [...], "namePool": {"given": [...], "family": [...]}}
+Return JSON: {"types": [...], "namePool": {"givenByGender": {"male": [...], "female": [...], "neutral": [...]}, "family": [...]}}

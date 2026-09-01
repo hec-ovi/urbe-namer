@@ -2,7 +2,7 @@
 
 Purpose: agentic pass that names every placeholder in a generated world (districts, stations, lines, businesses, civic buildings) against a theme prompt, and creates the themed dynamic NPC type strings with a prompt boilerplate each.
 
-Status: v0.1. NPC type shape is stable, simulation consumes it. World-state view tracks atlas blueprint v0.2.
+Status: v0.2. NPC type shape is stable, simulation consumes it. World-state view tracks atlas blueprint v0.2.
 
 ## In
 Two entry points, also exposed as a CLI (`npm run name`, `npm run types`).
@@ -26,7 +26,10 @@ Two entry points, also exposed as a CLI (`npm run name`, `npm run types`).
   - `grounding`: what the type is anchored to in the named world: `districts` (names), `parcelTypes` (atlas parcel types), `tiers` (atlas wealth tiers).
   - `weight`: relative demographic weight within its category (positive number, consumers normalize).
   Type counts per category respect `params.ranges`; grounding only references things the world actually contains.
-  The set also carries `namePool` (`given` and `family` string arrays, at least 20 distinct each): themed personal names, repeating across NPCs by design; family entries may be epithets or patronymics when the theme has none. Shape mirrored by simulation's NamePool.
+  The set also carries `namePool`: themed personal names, repeating across NPCs by design.
+  - `given`: flat array of every given name, at least 20 distinct. Shape mirrored by simulation's NamePool.
+  - `givenByGender`: `{ male, female, neutral }` string arrays holding those same names tagged, so a consumer can match a name to a body. Each name sits in exactly one list; `neutral` carries names anyone in the world bears, and a theme with no gendered names puts every given name there (individual lists may be empty). `given` is the union of the three in male, female, neutral order, derived by the harness, so tags and flat list always agree.
+  - `family`: at least 20 distinct; entries may be epithets or patronymics when the theme has no family names.
 
 ## Errors
 Closed set, thrown as `NamingError { code, message, detail? }`:

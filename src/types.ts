@@ -44,9 +44,14 @@ export interface NpcType {
   weight: number;
 }
 
+export type NameGender = "male" | "female" | "neutral";
+
 /** Themed personal name pool; names repeat across NPCs by design. */
 export interface NamePool {
+  /** every given name, flat: the union of givenByGender in male, female, neutral order */
   given: string[];
+  /** the same names tagged; each name sits in exactly one list, neutral holds names anyone carries */
+  givenByGender: Record<NameGender, string[]>;
   family: string[];
 }
 
