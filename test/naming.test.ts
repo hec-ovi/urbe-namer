@@ -1,0 +1,86 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { runNamingPass, NamingError } from "../src/index.js";
+import type { WorldState } from "../src/types.js";
+import { FakeModel, requiredIds, wellBehaved } from "./fake-model.js";
+
+const PARAMS = { theme: "a rain-soaked dystopian megacity" };
+
+function fixture(name: string): WorldState {
+  return JSON.parse(readFileSync(new URL(`../fixtures/${name}`, import.meta.url), "utf8"));
+}
+
+function collect(node: unknown, out: Record<string, unknown>[] = []): Record<string, unknown>[] {
+  if (Array.isArray(node)) node.forEach((item) => collect(item, out));
+  else if (node !== null && typeof node === "object") {
+    const obj = node as Record<string, unknown>;
+    if (typeof obj.id === "string") out.push(obj);
+    Object.values(obj).forEach((value) => collect(value, out));
+  }
+  return out;
+}
+
+describe("runNamingPass", () => {
+  it("names every nameable in an atlas-shaped blueprint and leaves the input untouched", async () => {
+    const world = fixture("blueprint-small.json");
+    const named = await runNamingPass(world, PARAMS, new FakeModel());
+
+    const entities = collect(named);
+    const unnamed = entities.filter(
+      (e) => !("name" in e) && !(e.type === "residential") && !String(e.id).startsWith("bs"),
+    );
+    expect(unnamed).toEqual([]);
+    for (const parcel of entities.filter((e) => e.type === "residential")) {
+      expect(parcel.name).toBeUndefined();
+    }
+    const meta = named.meta.naming!;
+    expect(meta.theme).toBe(PARAMS.theme);
+    expect(meta.model).toBe("fake-model");
+    expect(collect(world).some((e) => "name" in e)).toBe(false);
+  });
+
+  it("takes explicit placeholders as-is when the state pre-labels them", async () => {
+    const named = await runNamingPass(fixture("world-explicit.json"), PARAMS, new FakeModel());
+    const byId = new Map(collect(named).map((e) => [e.id, e]));
+    expect(byId.get("p0")!.name).toBe("N-p0");
+    expect(byId.get("p2")!.name).toBeUndefined();
+  });
+
+  it("covers a large world across chunked parallel calls", async () => {
+    const world = fixture("blueprint-large.json");
+    const model = new FakeModel();
+    const named = await runNamingPass(world, PARAMS, model, { chunkSize: 25 });
+    expect(collect(named).filter((e) => "name" in e).length).toBe(183);
+    expect(model.requests.length).toBeGreaterThan(2);
+  });
+
+  it("rejects an empty theme", async () => {
+    await expect(runNamingPass(fixture("blueprint-small.json"), { theme: " " }, new FakeModel()))
+      .rejects.toMatchObject({ code: "INVALID_PARAMS" });
+  });
+
+  it("rejects a world with nothing nameable", async () => {
+    const world = { meta: { seed: 1 }, districts: [], parcels: [] } as unknown as WorldState;
+    await expect(runNamingPass(world, PARAMS, new FakeModel()))
+      .rejects.toMatchObject({ code: "INVALID_WORLD" });
+  });
+
+  it("throws COVERAGE_ERROR when repairs cannot fix duplicate names", async () => {
+    const colliding = new FakeModel((request) => {
+      const ids = requiredIds(request.schema);
+      const names = Object.fromEntries(ids.map((id) => [id, "Same Name"]));
+      const wantsCharter = ((request.schema?.required as string[]) ?? []).includes("charter");
+      return wantsCharter ? { charter: "c", names } : { names };
+    });
+    await expect(runNamingPass(fixture("blueprint-small.json"), PARAMS, colliding))
+      .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
+  });
+
+  it("surfaces provider failures as LLM_ERROR", async () => {
+    const failing = new FakeModel(() => {
+      throw new NamingError("LLM_ERROR", "provider failure: boom");
+    });
+    await expect(runNamingPass(fixture("blueprint-small.json"), PARAMS, failing))
+      .rejects.toMatchObject({ code: "LLM_ERROR" });
+  });
+});

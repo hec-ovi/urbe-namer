@@ -44,7 +44,14 @@ export interface NpcType {
   weight: number;
 }
 
+/** Themed personal name pool; names repeat across NPCs by design. */
+export interface NamePool {
+  given: string[];
+  family: string[];
+}
+
 export interface NpcTypeSet {
   meta: { theme: string; worldSeed: string | number; model?: string; createdAt: string };
   types: NpcType[];
+  namePool: NamePool;
 }

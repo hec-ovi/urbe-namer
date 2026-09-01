@@ -1,3 +1,14 @@
 # Box map
 
-- root box: see CONTRACT.md. No inner boxes yet.
+- root box: the naming and typing passes. Contract in CONTRACT.md; entry points `runNamingPass` / `runTypingPass` (src/index.ts) plus the CLI (src/cli.ts).
+  - src/world: worksheet extraction (generic placeholder walk + atlas blueprint policy) and name patch-back.
+  - src/passes: naming (charter + chunked groups + repair), typing (types + name pool), constrained output schemas.
+  - src/llm: ChatModel surface and the Claude implementation.
+  - src/validate: JSON-schema and coverage validation.
+  - prompts/: every prompt and few-shot set, one .md each.
+  - schema/: published JSON schemas (world-state view, params, name map, NPC types).
+  - fixtures/: standalone atlas-shaped worlds plus one explicit-placeholder world.
+
+No inner boxes; the folder is small enough for one agent.
+
+Research conclusions: docs/RESEARCH.md.

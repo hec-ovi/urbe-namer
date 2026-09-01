@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { Ajv, type ValidateFunction } from "ajv";
+import { Ajv2020 as Ajv, type ValidateFunction } from "ajv/dist/2020.js";
 import { NamingError, type NamingErrorCode } from "../errors.js";
 
 const SCHEMA_DIR = new URL("../../schema/", import.meta.url);

@@ -1,6 +1,7 @@
 import type { Nameable, WorldState } from "../types.js";
 import { NamingError } from "../errors.js";
 import { PlaceholderExtractor } from "./extractor.js";
+import { asArray } from "../json.js";
 
 /** Atlas transit collections that get names, with their naming group. Bus stops stay unnamed. */
 const TRANSIT_GROUPS: Record<string, string> = {
@@ -66,8 +67,4 @@ export class WorksheetBuilder {
       seen.add(n.id);
     }
   }
-}
-
-function asArray(value: unknown): Record<string, unknown>[] {
-  return Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
 }

@@ -3,8 +3,17 @@
   "$id": "urbe/naming/npc-types",
   "title": "Dynamic NPC type set produced by the typing pass",
   "type": "object",
-  "required": ["meta", "types"],
+  "required": ["meta", "types", "namePool"],
   "properties": {
+    "namePool": {
+      "type": "object",
+      "description": "themed personal name pool; names repeat across NPCs by design. Family entries may be epithets or patronymics when the theme has no family names.",
+      "required": ["given", "family"],
+      "properties": {
+        "given": { "type": "array", "minItems": 20, "items": { "type": "string", "minLength": 1 } },
+        "family": { "type": "array", "minItems": 20, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
     "meta": {
       "type": "object",
       "required": ["theme", "worldSeed", "createdAt"],
