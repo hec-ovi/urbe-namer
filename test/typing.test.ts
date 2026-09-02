@@ -1,58 +1,11 @@
 import { readFileSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { runNamingPass, runTypingPass } from "../src/index.js";
-import type { NpcType, WorldState } from "../src/types.js";
+import type { WorldState } from "../src/types.js";
 import type { PopulationStats } from "../src/passes/typing.js";
-import { FakeModel } from "./fake-model.js";
+import { FakeModel, FAMILY, GOOD_TYPES, POOL } from "./fake-model.js";
 
 const PARAMS = { theme: "a rain-soaked dystopian megacity" };
-
-const GOOD_TYPES: NpcType[] = [
-  {
-    type: "tower_resident",
-    label: "Tower resident",
-    category: "resident",
-    boilerplate: "Lives in the high stacks.",
-    grounding: { districts: ["N-d0"], tiers: ["high_rich"] },
-    weight: 0.5,
-  },
-  {
-    type: "vat_worker",
-    label: "Vat worker",
-    category: "worker",
-    boilerplate: "Works the fabrication lines.",
-    examples: ["Okonkwo keeps a seedling by the lamp."],
-    grounding: { districts: ["N-d1"], parcelTypes: ["factory"], tiers: ["poor"] },
-    weight: 0.4,
-  },
-  {
-    type: "counter_vendor",
-    label: "Counter vendor",
-    category: "vendor",
-    boilerplate: "Runs a counter.",
-    grounding: { parcelTypes: ["coffee_shop", "restaurant"] },
-    weight: 0.3,
-  },
-  {
-    type: "compliance_officer",
-    label: "Compliance officer",
-    category: "authority",
-    boilerplate: "Patrols the rows.",
-    grounding: { parcelTypes: ["police"] },
-    weight: 0.2,
-  },
-];
-
-const FAMILY = Array.from({ length: 25 }, (_, i) => `Family${i}`);
-
-const POOL = {
-  givenByGender: {
-    male: Array.from({ length: 10 }, (_, i) => `Male${i}`),
-    female: Array.from({ length: 10 }, (_, i) => `Female${i}`),
-    neutral: Array.from({ length: 5 }, (_, i) => `Neutral${i}`),
-  },
-  family: FAMILY,
-};
 
 const STATS: PopulationStats = {
   population: 5200,

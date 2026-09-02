@@ -1,7 +1,7 @@
 # Box map
 
-- root box: the naming and typing passes. Contract in CONTRACT.md; entry points `runNamingPass` / `runTypingPass` (src/index.ts) plus the CLI (src/cli.ts).
-  - src/world: worksheet extraction (generic placeholder walk + atlas blueprint policy) and name patch-back.
+- root box: the naming and typing passes. Contract in CONTRACT.md; entry points `runNamingPass` / `runTypingPass` / `exportBusinesses` / `runWorld` (src/index.ts) plus the CLI (src/cli.ts).
+  - src/world: worksheet extraction (generic placeholder walk + atlas blueprint policy), name patch-back, the world folder (fixed file names) and the pipeline that chains the passes over it.
   - src/passes: naming (charter + chunked groups + repair), typing (types + name pool), constrained output schemas.
   - src/llm: ChatModel surface, Claude implementation, OpenAI-compatible implementation (env-selected, local llama.cpp).
   - src/validate: JSON-schema and coverage validation, the sign alphabet.

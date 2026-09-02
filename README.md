@@ -9,10 +9,18 @@ Two passes, both a library call and a CLI, run against a local llama.cpp server 
 ```
 npm install
 npm test
+npm run world -- worlds/small --theme "rain-soaked port city, 2140, corporate enclaves"
+npm run build
+```
+
+`worlds/small/blueprint.json` is an atlas blueprint as generated (copy a sample there, or point the command at the folder the engine assembles a world in). The run writes `blueprint.named.json`, `npc-types.json` and `businesses.json` beside it and never writes `blueprint.json`, so a rerun starts from the same placeholders. Hand `blueprint.named.json` to the engine's `assemble-city`; it carries `npc-types.json` along.
+
+The steps also run one at a time on single files:
+
+```
 npm run name  -- world.json       --theme "rain-soaked port city, 2140, corporate enclaves"
 npm run types -- named-world.json --theme "rain-soaked port city, 2140, corporate enclaves" --stats population.json
 npm run businesses -- named-world.json
-npm run build
 ```
 
 Flags: `--model <id>`, `--out <file>`, and for the typing pass `--ranges '<json>'` (min and max types per category) and `--stats <populationStats.json>`. Provider settings come from the environment: `LLM_BASE_URL` names the OpenAI-compatible endpoint (default `http://localhost:8080/v1`), `LLM_MODEL` the served model (default: the first one the server lists), `LLM_API_KEY` is optional, and `LLM_PROVIDER=anthropic` switches to Claude. Bundled fixtures let both passes run with no other layer present.

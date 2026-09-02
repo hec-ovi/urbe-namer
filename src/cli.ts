@@ -1,9 +1,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { exportBusinesses, runNamingPass, runTypingPass, NamingError } from "./index.js";
+import { exportBusinesses, runNamingPass, runTypingPass, runWorld, NamingError } from "./index.js";
 import type { PopulationStats } from "./passes/typing.js";
 import type { RunParams, WorldState } from "./types.js";
+import { WORLD_FILES } from "./world/folder.js";
 
 const USAGE = `usage:
+  world      <folder>           --theme "<world description>" [--ranges '<json>'] [--stats <populationStats.json>] [--model <id>]
+             reads ${WORLD_FILES.blueprint}, writes ${WORLD_FILES.named}, ${WORLD_FILES.npcTypes} and ${WORLD_FILES.businesses} beside it
   name       <world.json>       --theme "<world description>" [--model <id>] [--out <file>]
   types      <named-world.json> --theme "<world description>" [--ranges '<json>'] [--stats <populationStats.json>] [--model <id>] [--out <file>]
   businesses <named-world.json> [--out <file>]`;
@@ -49,19 +52,26 @@ function runParams(flags: Record<string, string>): RunParams {
   };
 }
 
+function readStats(flags: Record<string, string>): PopulationStats | undefined {
+  return flags.stats ? readJson<PopulationStats>(flags.stats) : undefined;
+}
+
 async function main(): Promise<void> {
   const { command, input, flags } = parseArgs(process.argv.slice(2));
-  const world = readJson<WorldState>(input);
 
-  if (command === "name") {
-    const named = await runNamingPass(world, runParams(flags));
+  if (command === "world") {
+    const run = await runWorld(input, runParams(flags), readStats(flags));
+    console.log(
+      `${input}: ${WORLD_FILES.named}, ${WORLD_FILES.npcTypes} (${run.types.types.length} types), ${WORLD_FILES.businesses} (${run.businesses.length} businesses)`,
+    );
+  } else if (command === "name") {
+    const named = await runNamingPass(readJson<WorldState>(input), runParams(flags));
     writeJson(input, flags.out, "-named.json", named, "named world");
   } else if (command === "types") {
-    const stats = flags.stats ? readJson<PopulationStats>(flags.stats) : undefined;
-    const set = await runTypingPass(world, runParams(flags), stats);
+    const set = await runTypingPass(readJson<WorldState>(input), runParams(flags), readStats(flags));
     writeJson(input, flags.out, "-npc-types.json", set, "NPC type set");
   } else if (command === "businesses") {
-    writeJson(input, flags.out, "-businesses.json", exportBusinesses(world), "businesses list");
+    writeJson(input, flags.out, "-businesses.json", exportBusinesses(readJson<WorldState>(input)), "businesses list");
   } else {
     fail(USAGE);
   }

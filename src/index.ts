@@ -4,10 +4,14 @@ import { AnthropicModel } from "./llm/anthropic.js";
 import { OpenAICompatModel } from "./llm/openai-compat.js";
 import { NamingPass, type NamingPassOptions } from "./passes/naming.js";
 import { TypingPass, type PopulationStats, type TypingPassOptions } from "./passes/typing.js";
+import { WorldFolder } from "./world/folder.js";
+import { WorldPipeline, type WorldRun } from "./world/pipeline.js";
 
 export type { ChatModel, ChatRequest } from "./llm/model.js";
 export type { Business, NameGender, NamePool, Nameable, NpcType, NpcTypeSet, RunParams, WorldState } from "./types.js";
 export type { PopulationStats } from "./passes/typing.js";
+export type { WorldRun } from "./world/pipeline.js";
+export { WORLD_FILES } from "./world/folder.js";
 export { NamingError, type NamingErrorCode } from "./errors.js";
 export { OpenAICompatModel } from "./llm/openai-compat.js";
 export { exportBusinesses } from "./export/businesses.js";
@@ -39,4 +43,15 @@ export async function runTypingPass(
   options?: TypingPassOptions,
 ): Promise<NpcTypeSet> {
   return new TypingPass(model ?? (await resolveModel(params)), options).run(world, params, stats);
+}
+
+/** Names a world folder end to end: reads `blueprint.json`, writes `blueprint.named.json`,
+ *  `npc-types.json` and `businesses.json` beside it. `blueprint.json` is never written. */
+export async function runWorld(
+  folder: string,
+  params: RunParams,
+  stats?: PopulationStats,
+  model?: ChatModel,
+): Promise<WorldRun> {
+  return new WorldPipeline(model ?? (await resolveModel(params))).run(new WorldFolder(folder), params, stats);
 }

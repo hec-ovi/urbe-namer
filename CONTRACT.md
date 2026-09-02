@@ -5,15 +5,17 @@ Purpose: agentic pass that names every placeholder in a generated world (distric
 Status: v0.3. NPC type shape is stable, simulation consumes it. World-state view tracks atlas blueprint v0.4: street and rail `level` fields pass through untouched.
 
 ## In
-Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run types`, `npm run businesses`).
+Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run types`, `npm run businesses`), and the world folder run that chains them (`npm run world`).
 
 `runNamingPass(world, params) -> named world`
 `runTypingPass(namedWorld, params, populationStats?) -> NPC type set`
 `exportBusinesses(namedWorld) -> businesses list`
+`runWorld(folder, params, populationStats?) -> { named, types, businesses }`
 
 - `world`: a world state matching [schema/world-state.schema.json](schema/world-state.schema.json), naming's projection of the atlas `CityBlueprint` (../atlas/schema/blueprint.ts). Only the fields naming reads are validated; geometry passes through untouched. Nameables are selected by policy: every district, train/subway station and line, bus route, and every non-residential parcel. A state may instead pre-label entities with an explicit `placeholder` field; those are taken as-is (schema-agnostic walk).
 - `params`: [schema/params.schema.json](schema/params.schema.json). `theme` (required): the world description prompt, any era or tone. `model` optional. `ranges` (typing pass): min and max NPC types per category; never exact quotas.
 - `populationStats` (typing pass, optional): simulation's PopulationStats (../simulation/src/schemas/population.ts) for demographics grounding; absent, atlas `stats` ground the pass.
+- `folder` (world run): a world folder holding `blueprint.json`, an atlas blueprint as generated (copy a sample there, or point at the folder the engine assembles a world in). The run reads it, never writes it, and writes `blueprint.named.json`, `npc-types.json` and `businesses.json` beside it, the names the engine's assembly carries into a game world (`npc-types.json` is picked up beside the blueprint it is given). A rerun reads `blueprint.json` again and replaces the three; a failure midway keeps what was written before it. CLI: `npm run world -- <folder> --theme "..." [--ranges '<json>'] [--stats <file>] [--model <id>]`.
 - Provider, from the environment: an OpenAI-compatible chat endpoint at `LLM_BASE_URL` (default `http://localhost:8080/v1`, a local llama.cpp server), model `LLM_MODEL` (default: the first model the server lists at `/v1/models`), `LLM_API_KEY` optional; `params.model` overrides the model per run. `LLM_PROVIDER=anthropic` uses Claude instead (`ANTHROPIC_API_KEY`, model `claude-opus-5` unless `params.model` says otherwise).
 
 ## Out
@@ -36,7 +38,7 @@ Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run type
 
 ## Errors
 Closed set, thrown as `NamingError { code, message, detail? }`:
-- `INVALID_WORLD`: input fails the world-state schema, exposes nothing nameable, or has duplicate nameable ids; for the export, a world without names or with a business name outside the sign alphabet.
+- `INVALID_WORLD`: input fails the world-state schema, exposes nothing nameable, or has duplicate nameable ids; for the export, a world without names or with a business name outside the sign alphabet; for the world run, a folder without `blueprint.json`.
 - `INVALID_PARAMS`: missing or empty theme, malformed ranges.
 - `LLM_ERROR`: provider failure after retries.
 - `COVERAGE_ERROR`: repair loop exhausted; naming still incomplete, duplicated or outside the sign alphabet, or typing output stays ungrounded (references the world lacks, name pool below minimum).
