@@ -1,5 +1,7 @@
 # Changelog
 
+0.4.1: runs on atlas blueprint 0.5.0; station platforms and shafts pass through with the rest of the geometry, and the pass is held to naming exactly its policy set and touching nothing else in the document.
+
 0.4.0: `npm run world -- <folder> --theme ...` names a world folder in one command: reads `blueprint.json`, writes `blueprint.named.json`, `npc-types.json` and `businesses.json` beside it, the files the engine's assembly carries into a game world.
 
 0.3.3: every name spells in the sign alphabet (the materials letter atlas, 32 characters at most; accents fold, anything else repairs); `exportBusinesses` / `npm run businesses` writes the materials rebrand request for every named advertising parcel.

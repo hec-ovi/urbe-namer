@@ -77,7 +77,7 @@ const perDistrict = districts.map((d) => {
 });
 
 const world = {
-  meta: { version: "0.4.0", seed: "fixture-large", units: "meters" },
+  meta: { version: "0.5.0", seed: "fixture-large", units: "meters" },
   districts,
   parcels,
   transit,

@@ -20,6 +20,38 @@ function collect(node: unknown, out: Record<string, unknown>[] = []): Record<str
   return out;
 }
 
+/** Takes the pass's own additions back out: every `name` on an identified entity and the
+ *  `meta.naming` block. What is left must be the input, whatever else the blueprint carries. */
+function undoNaming(world: WorldState): { named: string[]; stripped: unknown } {
+  const named: string[] = [];
+  const strip = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(strip);
+    if (node === null || typeof node !== "object") return node;
+    const obj = node as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === "name" && typeof obj.id === "string") named.push(obj.id);
+      else out[key] = strip(value);
+    }
+    return out;
+  };
+  const stripped = strip(world) as { meta: Record<string, unknown> };
+  delete stripped.meta.naming;
+  return { named: named.sort(), stripped };
+}
+
+/** The nameables the pass promises to name: districts, non-residential parcels, transit but bus stops. */
+function policyIds(world: WorldState): string[] {
+  const transit = (world.transit ?? {}) as Record<string, { id: string }[]>;
+  return [
+    ...(world.districts as { id: string }[]).map((d) => d.id),
+    ...(world.parcels as { id: string; type: string }[]).filter((p) => p.type !== "residential").map((p) => p.id),
+    ...["trainStations", "subwayStations", "trainLines", "subwayLines", "busRoutes"].flatMap((k) =>
+      (transit[k] ?? []).map((e) => e.id),
+    ),
+  ].sort();
+}
+
 describe("runNamingPass", () => {
   it("names every nameable in an atlas-shaped blueprint and leaves the input untouched", async () => {
     const world = fixture("blueprint-small.json");
@@ -39,18 +71,13 @@ describe("runNamingPass", () => {
     expect(collect(world).some((e) => "name" in e)).toBe(false);
   });
 
-  it("runs on a full atlas blueprint (0.4.0) and changes nothing outside districts, parcels and transit", async () => {
+  it("names exactly the policy set of a full atlas blueprint and adds nothing else to it", async () => {
     const world = fixture("atlas-city-urbe-tiny.json");
     const named = await runNamingPass(world, PARAMS, new FakeModel());
+    const { named: namedIds, stripped } = undoNaming(named);
 
-    for (const key of ["meta", "streets", "blocks", "volumetric", "stats"]) {
-      expect({ ...(named[key] as object), naming: undefined }).toEqual({ ...(world[key] as object), naming: undefined });
-    }
-    const districts = named.districts as { name?: string }[];
-    const parcels = named.parcels as { type: string; name?: string }[];
-    expect(districts.every((d) => typeof d.name === "string")).toBe(true);
-    expect(parcels.filter((p) => p.type !== "residential").every((p) => typeof p.name === "string")).toBe(true);
-    expect(parcels.filter((p) => p.type === "residential").some((p) => "name" in p)).toBe(false);
+    expect(namedIds).toEqual(policyIds(world));
+    expect(stripped).toEqual(world);
   });
 
   it("takes explicit placeholders as-is when the state pre-labels them", async () => {

@@ -1,5 +1,5 @@
 {
-  "meta": { "version": "0.4.0", "seed": "fixture-small", "units": "meters" },
+  "meta": { "version": "0.5.0", "seed": "fixture-small", "units": "meters" },
   "districts": [
     { "id": "d0", "kind": "downtown", "tier": "high_rich", "maxFloors": 40 },
     { "id": "d1", "kind": "industrial", "tier": "poor", "maxFloors": 8 },
