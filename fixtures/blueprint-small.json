@@ -35,13 +35,28 @@
     ],
     "busRoutes": [{ "id": "br0", "stopIds": ["bs0", "bs1"], "edgeIds": ["e0", "e4"] }],
     "trainStations": [
-      { "id": "ts0", "districtId": "d0", "entrances": [], "level": 0 },
-      { "id": "ts1", "districtId": "d1", "entrances": [], "level": 0 }
+      { "id": "ts0", "position": [120, 200], "districtId": "d0",
+        "platform": [[30, 197], [210, 197], [210, 203], [30, 203]],
+        "entrances": [[118, 196], [122, 204]], "shafts": [], "level": 0 },
+      { "id": "ts1", "position": [620, 240], "districtId": "d1",
+        "platform": [[530, 237], [710, 237], [710, 243], [530, 243]],
+        "entrances": [[618, 236], [622, 244]], "shafts": [], "level": 0 }
     ],
     "trainLines": [{ "id": "tl0", "stationIds": ["ts0", "ts1"], "underground": false, "level": 0 }],
     "subwayStations": [
-      { "id": "ss0", "districtId": "d0", "entrances": [], "level": -12 },
-      { "id": "ss1", "districtId": "d2", "entrances": [], "level": -12 }
+      { "id": "ss0", "position": [300, 420], "districtId": "d0",
+        "platform": [[230, 416], [370, 416], [370, 424], [230, 424]],
+        "entrances": [[298, 414], [304, 426]],
+        "shafts": [
+          { "footprint": [[296, 412], [300, 412], [300, 416], [296, 416]], "top": 0, "bottom": -12, "passage": [] },
+          { "footprint": [[302, 424], [306, 424], [306, 428], [302, 428]], "top": 0, "bottom": -12, "passage": [[304, 424], [304, 420]] }
+        ], "level": -12 },
+      { "id": "ss1", "position": [700, 520], "districtId": "d2",
+        "platform": [[630, 516], [770, 516], [770, 524], [630, 524]],
+        "entrances": [[698, 514]],
+        "shafts": [
+          { "footprint": [[696, 512], [700, 512], [700, 516], [696, 516]], "top": 0, "bottom": -12, "passage": [] }
+        ], "level": -12 }
     ],
     "subwayLines": [{ "id": "sl0", "stationIds": ["ss0", "ss1"], "underground": true, "level": -12 }]
   },

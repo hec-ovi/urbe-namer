@@ -53,32 +53,19 @@ function policyIds(world: WorldState): string[] {
 }
 
 describe("runNamingPass", () => {
-  it("names every nameable in an atlas-shaped blueprint and leaves the input untouched", async () => {
-    const world = fixture("blueprint-small.json");
-    const named = await runNamingPass(world, PARAMS, new FakeModel());
+  it.each(["atlas-city-urbe-tiny.json", "blueprint-small.json"])(
+    "names exactly the policy set of %s and adds nothing else to it",
+    async (file) => {
+      const world = fixture(file);
+      const named = await runNamingPass(world, PARAMS, new FakeModel());
+      const { named: namedIds, stripped } = undoNaming(named);
 
-    const entities = collect(named);
-    const unnamed = entities.filter(
-      (e) => !("name" in e) && !(e.type === "residential") && !String(e.id).startsWith("bs"),
-    );
-    expect(unnamed).toEqual([]);
-    for (const parcel of entities.filter((e) => e.type === "residential")) {
-      expect(parcel.name).toBeUndefined();
-    }
-    const meta = named.meta.naming!;
-    expect(meta.theme).toBe(PARAMS.theme);
-    expect(meta.model).toBe("fake-model");
-    expect(collect(world).some((e) => "name" in e)).toBe(false);
-  });
-
-  it("names exactly the policy set of a full atlas blueprint and adds nothing else to it", async () => {
-    const world = fixture("atlas-city-urbe-tiny.json");
-    const named = await runNamingPass(world, PARAMS, new FakeModel());
-    const { named: namedIds, stripped } = undoNaming(named);
-
-    expect(namedIds).toEqual(policyIds(world));
-    expect(stripped).toEqual(world);
-  });
+      expect(namedIds).toEqual(policyIds(world));
+      expect(stripped).toEqual(world);
+      expect(named.meta.naming).toMatchObject({ theme: PARAMS.theme, model: "fake-model" });
+      expect(typeof named.meta.naming!.namedAt).toBe("string");
+    },
+  );
 
   it("takes explicit placeholders as-is when the state pre-labels them", async () => {
     const named = await runNamingPass(fixture("world-explicit.json"), PARAMS, new FakeModel());

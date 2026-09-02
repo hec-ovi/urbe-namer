@@ -1,5 +1,7 @@
 # Changelog
 
+0.4.3: the naming-shaped fixture carries the blueprint 0.5.0 station shape (position, platform, entrances, shafts), so the pass-through check covers a world with transit in it.
+
 0.4.2: the CLI prints an error's report only when it has one, so a run against a server that is down ends on the one line that says so.
 
 0.4.1: runs on atlas blueprint 0.5.0; station platforms and shafts pass through with the rest of the geometry, and the pass is held to naming exactly its policy set and touching nothing else in the document.
