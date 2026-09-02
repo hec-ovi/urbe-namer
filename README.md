@@ -2,7 +2,7 @@
 
 The agentic pass that turns a generated world of placeholders into a named one. Give it a world state and a theme prompt in any era or tone; it names every district, station, line, route and business, and writes the themed NPC type set the population layer instantiates people from.
 
-Two passes, both a library call and a CLI. Claude by default; any OpenAI-compatible endpoint works, including a local llama.cpp server.
+Two passes, both a library call and a CLI, run against a local llama.cpp server by default; any OpenAI-compatible endpoint or Claude works.
 
 ## Run
 
@@ -14,7 +14,7 @@ npm run types -- named-world.json --theme "rain-soaked port city, 2140, corporat
 npm run build
 ```
 
-Flags: `--model <id>`, `--out <file>`, and for the typing pass `--ranges '<json>'` (min and max types per category) and `--stats <populationStats.json>`. Provider settings come from the environment: `LLM_BASE_URL` switches to an OpenAI-compatible endpoint, with `LLM_MODEL` naming the served model and `LLM_API_KEY` optional. Bundled fixtures let both passes run with no other layer present.
+Flags: `--model <id>`, `--out <file>`, and for the typing pass `--ranges '<json>'` (min and max types per category) and `--stats <populationStats.json>`. Provider settings come from the environment: `LLM_BASE_URL` names the OpenAI-compatible endpoint (default `http://localhost:8080/v1`), `LLM_MODEL` the served model (default: the first one the server lists), `LLM_API_KEY` is optional, and `LLM_PROVIDER=anthropic` switches to Claude. Bundled fixtures let both passes run with no other layer present.
 
 ## In
 

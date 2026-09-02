@@ -1,5 +1,7 @@
 # Changelog
 
+0.3.2: the local OpenAI-compatible server is the default provider: `LLM_BASE_URL` defaults to `http://localhost:8080/v1`, `LLM_MODEL` to the first model it serves; `LLM_PROVIDER=anthropic` selects Claude.
+
 0.3.1: runs on atlas blueprint 0.4.0; street and rail `level` fields pass through untouched, and the atlas tiny sample ships as a fixture.
 
 0.3: NPC name pool tags given names male, female or neutral in `namePool.givenByGender`; `namePool.given` stays the flat union of the three.
