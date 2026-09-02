@@ -5,6 +5,7 @@ import { PromptLoader } from "../prompts/loader.js";
 import { WorksheetBuilder } from "../world/worksheet.js";
 import { NamePatcher } from "../world/patcher.js";
 import { CoverageValidator, namespaceOf } from "../validate/coverage.js";
+import { foldForSign } from "../validate/sign.js";
 import { SchemaValidator } from "../validate/schemas.js";
 import { fewshotFile } from "./fewshots.js";
 import { chunkOutputSchema, districtsOutputSchema } from "./output-schemas.js";
@@ -138,7 +139,7 @@ export class NamingPass {
     for (let round = 0; round < this.maxRepairRounds; round++) {
       const report = this.coverage.check(worksheet, names);
       for (const id of report.invented) delete names[id];
-      const broken = [...report.missing, ...report.empty, ...report.duplicated];
+      const broken = [...report.missing, ...report.empty, ...report.unsignable, ...report.duplicated];
       if (broken.length === 0) return;
 
       const byId = new Map(worksheet.map((n) => [n.id, n]));
@@ -176,12 +177,13 @@ function worksheetJson(entities: Nameable[]): string {
     .join("\n");
 }
 
+/** Reads the id-keyed map out of a reply and folds each name for the sign alphabet. */
 function extractNames(raw: unknown): Record<string, string> {
   const container = (raw ?? {}) as Record<string, unknown>;
   const source = container.names && typeof container.names === "object" ? container.names : container;
   const names: Record<string, string> = {};
   for (const [key, value] of Object.entries(source as Record<string, unknown>)) {
-    if (typeof value === "string") names[key] = value;
+    if (typeof value === "string") names[key] = foldForSign(value);
   }
   return names;
 }

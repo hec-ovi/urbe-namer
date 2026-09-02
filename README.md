@@ -11,6 +11,7 @@ npm install
 npm test
 npm run name  -- world.json       --theme "rain-soaked port city, 2140, corporate enclaves"
 npm run types -- named-world.json --theme "rain-soaked port city, 2140, corporate enclaves" --stats population.json
+npm run businesses -- named-world.json
 npm run build
 ```
 
@@ -24,7 +25,8 @@ Flags: `--model <id>`, `--out <file>`, and for the typing pass `--ranges '<json>
 
 ## Out
 
-- **A named world**: the input document untouched except that every nameable gains a `name`, with a `meta.naming` record of theme, model and timestamp. It is saved alongside the placeholder version, never over it. Names are unique case-insensitively inside their namespace, and themed chains stay possible through branch-qualified names.
+- **A named world**: the input document untouched except that every nameable gains a `name`, with a `meta.naming` record of theme, model and timestamp. It is saved alongside the placeholder version, never over it. Names are unique case-insensitively inside their namespace, themed chains stay possible through branch-qualified names, and every name spells in the sign alphabet (letters, digits, space and a few marks, 32 characters at most) so signs and screens letter it verbatim.
+- **A businesses list** (`schema/businesses.schema.json`): every named hotel, shop, mall, restaurant, coffee shop, corporation and clinic as `{ brandName, businessKind, tier }`, the request the materials rebrand lane spells onto its ad screens.
 - **An NPC type set** (`schema/npc-types.schema.json`): each type has a machine string (`dock_smuggler`), a display label, a category (resident, worker, vendor, authority, transit, street), a prompt boilerplate consumers instantiate from, optional example sketches, a demographic weight, and grounding that references only districts, parcel types and tiers the world actually contains. The set also carries a themed name pool: at least 20 distinct given names, both as a flat list and tagged male, female or neutral so a consumer can match a name to a body, plus at least 20 family names.
 
 ## How it works
@@ -35,4 +37,4 @@ Every prompt and few-shot set lives in its own `.md` file under `prompts/`, edit
 
 ## In the urbe family
 
-It names the world that [urbe-atlas](../urbe-atlas) generates and grounds its NPC types in [urbe-population](../urbe-population) demographics. The named world and the type set go to [urbe-population](../urbe-population), which instantiates people from them, [urbe-quests](../urbe-quests), which writes the story on top, and [urbe-engine](../urbe-engine), which shows the names in the world. The full picture lives in [urbe](../urbe).
+It names the world that [urbe-atlas](../urbe-atlas) generates and grounds its NPC types in [urbe-population](../urbe-population) demographics. The named world and the type set go to [urbe-population](../urbe-population), which instantiates people from them, [urbe-quests](../urbe-quests), which writes the story on top, and [urbe-engine](../urbe-engine), which shows the names in the world; the businesses list goes to [urbe-materials](../urbe-materials), which brands its ad screens with them. The full picture lives in [urbe](../urbe).

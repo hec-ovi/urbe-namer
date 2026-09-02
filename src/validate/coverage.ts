@@ -1,4 +1,5 @@
 import type { Nameable } from "../types.js";
+import { spellsOnSign } from "./sign.js";
 
 /** Uniqueness namespace: all parcels share one (a hotel and a mall must not collide);
  *  districts and each transit kind keep their own, so an interchange may reuse a
@@ -15,12 +16,14 @@ export interface CoverageReport {
   invented: string[];
   /** ids whose name is empty or whitespace */
   empty: string[];
+  /** ids whose name does not spell in the sign alphabet or runs past its length */
+  unsignable: string[];
   /** ids whose name collides with another name in the same namespace (case-insensitive) */
   duplicated: string[];
 }
 
-/** Checks a name map against the worksheet: exact cover, nothing invented,
- *  names unique within their group. Feeds the repair loop. */
+/** Checks a name map against the worksheet: exact cover, nothing invented, every name
+ *  signable, names unique within their namespace. Feeds the repair loop. */
 export class CoverageValidator {
   check(worksheet: Nameable[], names: Record<string, string>): CoverageReport {
     const byId = new Map(worksheet.map((n) => [n.id, n]));
@@ -28,6 +31,7 @@ export class CoverageValidator {
     const missing: string[] = [];
     const invented: string[] = [];
     const empty: string[] = [];
+    const unsignable: string[] = [];
     const duplicated: string[] = [];
 
     for (const id of Object.keys(names)) {
@@ -45,6 +49,10 @@ export class CoverageValidator {
         empty.push(entity.id);
         continue;
       }
+      if (!spellsOnSign(name)) {
+        unsignable.push(entity.id);
+        continue;
+      }
       const key = name.trim().toLowerCase();
       const namespace = namespaceOf(entity);
       let perGroup = groupNames.get(namespace);
@@ -60,7 +68,7 @@ export class CoverageValidator {
       }
     }
 
-    const ok = missing.length + invented.length + empty.length + duplicated.length === 0;
-    return { ok, missing, invented, empty, duplicated };
+    const ok = missing.length + invented.length + empty.length + unsignable.length + duplicated.length === 0;
+    return { ok, missing, invented, empty, unsignable, duplicated };
   }
 }

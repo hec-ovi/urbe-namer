@@ -4,9 +4,10 @@
   - src/world: worksheet extraction (generic placeholder walk + atlas blueprint policy) and name patch-back.
   - src/passes: naming (charter + chunked groups + repair), typing (types + name pool), constrained output schemas.
   - src/llm: ChatModel surface, Claude implementation, OpenAI-compatible implementation (env-selected, local llama.cpp).
-  - src/validate: JSON-schema and coverage validation.
+  - src/validate: JSON-schema and coverage validation, the sign alphabet.
+  - src/export: the businesses list for the materials rebrand lane.
   - prompts/: every prompt and few-shot set, one .md each.
-  - schema/: published JSON schemas (world-state view, params, name map, NPC types).
+  - schema/: published JSON schemas (world-state view, params, NPC types, businesses).
   - fixtures/: the atlas tiny sample verbatim (blueprint 0.4.0), two naming-shaped worlds, one explicit-placeholder world.
 
 No inner boxes; the folder is small enough for one agent.

@@ -6,6 +6,7 @@ Rules that always hold:
 - Every name in a batch must be distinct from the others and from the taken names you are shown. A franchise or chain is allowed and welcome when the theme supports it, but each location then carries a distinguishing part ("Brass Kettle - Dockside", "Brass Kettle - High Row").
 - Wealth tier and district character shape the register: a poor dockside bar and a high-rich tower restaurant must not sound like siblings.
 - Names are for players to read in a game world: pronounceable on first pass, no lore dumps, no explanatory subtitles unless the naming charter says otherwise.
+- Every name gets lettered onto a sign or a screen, so it spells in the sign alphabet only: plain letters A to Z, digits, spaces and the marks - . , ' ! ? : / & + (no accents, no other symbols), and it fits a shopfront: 32 characters at most.
 - Follow the naming charter you are given. Its cliche blacklist is binding: a blacklisted pattern never appears, not even once.
 - Few-shot example names are illustrations only and never valid output.
 

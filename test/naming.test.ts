@@ -68,6 +68,30 @@ describe("runNamingPass", () => {
     expect(model.requests.length).toBeGreaterThan(2);
   });
 
+  it("folds accents onto the sign alphabet and repairs names that cannot spell on a sign", async () => {
+    const world = fixture("blueprint-small.json");
+    let repairs = 0;
+    const model = new FakeModel((request) => {
+      const ids = requiredIds(request.schema);
+      const isRepair = request.user.includes("came back with problems");
+      if (isRepair) repairs += 1;
+      const names = Object.fromEntries(
+        ids.map((id) => [
+          id,
+          id === "p1" && !isRepair ? "Café  Nöir " : id === "p2" && !isRepair ? "Ж Bar" : `N-${id}`,
+        ]),
+      );
+      const wantsCharter = ((request.schema?.required as string[]) ?? []).includes("charter");
+      return wantsCharter ? { charter: "c", names } : { names };
+    });
+    const named = await runNamingPass(world, PARAMS, model);
+    const byId = new Map(collect(named).map((e) => [e.id, e]));
+
+    expect(byId.get("p1")!.name).toBe("Cafe Noir");
+    expect(byId.get("p2")!.name).toBe("N-p2");
+    expect(repairs).toBe(1);
+  });
+
   it("rejects an empty theme", async () => {
     await expect(runNamingPass(fixture("blueprint-small.json"), { theme: " " }, new FakeModel()))
       .rejects.toMatchObject({ code: "INVALID_PARAMS" });

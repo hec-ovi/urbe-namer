@@ -5,10 +5,11 @@ Purpose: agentic pass that names every placeholder in a generated world (distric
 Status: v0.3. NPC type shape is stable, simulation consumes it. World-state view tracks atlas blueprint v0.4: street and rail `level` fields pass through untouched.
 
 ## In
-Two entry points, also exposed as a CLI (`npm run name`, `npm run types`).
+Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run types`, `npm run businesses`).
 
 `runNamingPass(world, params) -> named world`
 `runTypingPass(namedWorld, params, populationStats?) -> NPC type set`
+`exportBusinesses(namedWorld) -> businesses list`
 
 - `world`: a world state matching [schema/world-state.schema.json](schema/world-state.schema.json), naming's projection of the atlas `CityBlueprint` (../atlas/schema/blueprint.ts). Only the fields naming reads are validated; geometry passes through untouched. Nameables are selected by policy: every district, train/subway station and line, bus route, and every non-residential parcel. A state may instead pre-label entities with an explicit `placeholder` field; those are taken as-is (schema-agnostic walk).
 - `params`: [schema/params.schema.json](schema/params.schema.json). `theme` (required): the world description prompt, any era or tone. `model` optional. `ranges` (typing pass): min and max NPC types per category; never exact quotas.
@@ -16,7 +17,7 @@ Two entry points, also exposed as a CLI (`npm run name`, `npm run types`).
 - Provider, from the environment: an OpenAI-compatible chat endpoint at `LLM_BASE_URL` (default `http://localhost:8080/v1`, a local llama.cpp server), model `LLM_MODEL` (default: the first model the server lists at `/v1/models`), `LLM_API_KEY` optional; `params.model` overrides the model per run. `LLM_PROVIDER=anthropic` uses Claude instead (`ANTHROPIC_API_KEY`, model `claude-opus-5` unless `params.model` says otherwise).
 
 ## Out
-- Named world: the input state, untouched except every nameable gains `name` and `meta.naming` records `{theme, model, namedAt}`. Saved alongside the placeholder version, never over it. Names are unique case-insensitively within their namespace: all parcels share one namespace, districts and each transit kind keep their own (an interchange may reuse a station name across modes); themed chains stay possible through branch-qualified names.
+- Named world: the input state, untouched except every nameable gains `name` and `meta.naming` records `{theme, model, namedAt}`. Saved alongside the placeholder version, never over it. Names are unique case-insensitively within their namespace: all parcels share one namespace, districts and each transit kind keep their own (an interchange may reuse a station name across modes); themed chains stay possible through branch-qualified names. Every name spells in the sign alphabet (the materials letter atlas: letters, digits, space and `- . , ' ! ? : / & +`, 32 characters at most), so signs and screens letter it verbatim; accented letters the model returns fold onto their base letter, anything else goes through repair.
 - NPC type set: [schema/npc-types.schema.json](schema/npc-types.schema.json). Each type:
   - `type`: unique machine string (`^[a-z][a-z0-9_]*$`), e.g. `dock_smuggler`.
   - `label`: display name.
@@ -31,12 +32,14 @@ Two entry points, also exposed as a CLI (`npm run name`, `npm run types`).
   - `givenByGender`: `{ male, female, neutral }` string arrays holding those same names tagged, so a consumer can match a name to a body. Each name sits in exactly one list; `neutral` carries names anyone in the world bears, and a theme with no gendered names puts every given name there (individual lists may be empty). `given` is the union of the three in male, female, neutral order, derived by the harness, so tags and flat list always agree.
   - `family`: at least 20 distinct; entries may be epithets or patronymics when the theme has no family names.
 
+- Businesses list: [schema/businesses.schema.json](schema/businesses.schema.json), the request shape of the materials rebrand lane (../materials/CONTRACT.md): every named parcel of an advertising type (hotel, commerce, mall, restaurant, coffee_shop, corpo, clinic) as `{ brandName, businessKind, tier }` in blueprint order. A world with no such parcel exports an empty list.
+
 ## Errors
 Closed set, thrown as `NamingError { code, message, detail? }`:
-- `INVALID_WORLD`: input fails the world-state schema, exposes nothing nameable, or has duplicate nameable ids.
+- `INVALID_WORLD`: input fails the world-state schema, exposes nothing nameable, or has duplicate nameable ids; for the export, a world without names or with a business name outside the sign alphabet.
 - `INVALID_PARAMS`: missing or empty theme, malformed ranges.
 - `LLM_ERROR`: provider failure after retries.
-- `COVERAGE_ERROR`: repair loop exhausted; naming still incomplete or duplicated, or typing output stays ungrounded (references the world lacks, name pool below minimum).
+- `COVERAGE_ERROR`: repair loop exhausted; naming still incomplete, duplicated or outside the sign alphabet, or typing output stays ungrounded (references the world lacks, name pool below minimum).
 - `RANGE_ERROR`: typing pass produced type counts outside `[min, max]` after repair.
 
 ## Invariants
@@ -48,6 +51,7 @@ Closed set, thrown as `NamingError { code, message, detail? }`:
 ## Depends on
 - ../atlas/CONTRACT.md (blueprint v0.4: district kinds, wealth tiers, parcel types, transit collections, stats)
 - ../simulation/CONTRACT.md (demographics; until its stats surface lands, typing grounds on atlas `stats`)
+- ../materials/CONTRACT.md (rebrand request shape, letter atlas charset)
 
 ## Consumers
-- ../simulation (NPC type set), ../quests (named world, NPC type set), ../engine (named world)
+- ../simulation (NPC type set), ../quests (named world, NPC type set), ../engine (named world), ../materials (businesses list)

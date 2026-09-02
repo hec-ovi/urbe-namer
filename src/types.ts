@@ -28,6 +28,13 @@ export interface NameMap {
   names: Record<string, string>;
 }
 
+/** One entry of the materials rebrand request: a named parcel of an advertising type. */
+export interface Business {
+  brandName: string;
+  businessKind: string;
+  tier: string;
+}
+
 export interface RunParams {
   theme: string;
   model?: string;

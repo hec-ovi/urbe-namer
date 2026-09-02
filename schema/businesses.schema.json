@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urbe/naming/businesses",
+  "title": "Businesses of a named world",
+  "description": "The materials rebrand request (../materials/schema/rebrand-request.schema.json): every named parcel of an advertising type, in blueprint order. Brand names spell in the sign alphabet of the materials letter atlas.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["brandName", "businessKind", "tier"],
+    "additionalProperties": false,
+    "properties": {
+      "brandName": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9 \\-.,'!?:/&+]{1,32}$",
+        "description": "the parcel's name; signs uppercase it"
+      },
+      "businessKind": {
+        "enum": ["hotel", "commerce", "mall", "restaurant", "coffee_shop", "corpo", "clinic"],
+        "description": "the parcel type; the parcel types that advertise"
+      },
+      "tier": { "enum": ["poor", "mid", "rich", "high_rich"] }
+    }
+  }
+}

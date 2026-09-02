@@ -1,6 +1,6 @@
 {
   "name": "urbe-naming",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "type": "module",
   "description": "Agentic naming and NPC typing pass for urbe world states",
@@ -8,7 +8,8 @@
     "build": "tsc",
     "test": "vitest run",
     "name": "tsx src/cli.ts name",
-    "types": "tsx src/cli.ts types"
+    "types": "tsx src/cli.ts types",
+    "businesses": "tsx src/cli.ts businesses"
   },
   "engines": {
     "node": ">=20"

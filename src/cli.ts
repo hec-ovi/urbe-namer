@@ -1,11 +1,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { runNamingPass, runTypingPass, NamingError } from "./index.js";
+import { exportBusinesses, runNamingPass, runTypingPass, NamingError } from "./index.js";
 import type { PopulationStats } from "./passes/typing.js";
 import type { RunParams, WorldState } from "./types.js";
 
 const USAGE = `usage:
-  name  <world.json>       --theme "<world description>" [--model <id>] [--out <file>]
-  types <named-world.json> --theme "<world description>" [--ranges '<json>'] [--stats <populationStats.json>] [--model <id>] [--out <file>]`;
+  name       <world.json>       --theme "<world description>" [--model <id>] [--out <file>]
+  types      <named-world.json> --theme "<world description>" [--ranges '<json>'] [--stats <populationStats.json>] [--model <id>] [--out <file>]
+  businesses <named-world.json> [--out <file>]`;
 
 interface Args {
   command: string;
@@ -29,33 +30,38 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-function outPath(input: string, flag: string | undefined, suffix: string): string {
-  return flag ?? input.replace(/\.json$/, "") + suffix;
+function readJson<T>(path: string): T {
+  return JSON.parse(readFileSync(path, "utf8")) as T;
 }
 
-async function main(): Promise<void> {
-  const { command, input, flags } = parseArgs(process.argv.slice(2));
+function writeJson(input: string, flag: string | undefined, suffix: string, value: unknown, what: string): void {
+  const out = flag ?? input.replace(/\.json$/, "") + suffix;
+  writeFileSync(out, JSON.stringify(value, null, 2) + "\n");
+  console.log(`${what} written to ${out}`);
+}
+
+function runParams(flags: Record<string, string>): RunParams {
   if (!flags.theme) fail(USAGE);
-  const world = JSON.parse(readFileSync(input, "utf8")) as WorldState;
-  const params: RunParams = {
+  return {
     theme: flags.theme,
     model: flags.model,
     ranges: flags.ranges ? (JSON.parse(flags.ranges) as RunParams["ranges"]) : undefined,
   };
+}
+
+async function main(): Promise<void> {
+  const { command, input, flags } = parseArgs(process.argv.slice(2));
+  const world = readJson<WorldState>(input);
 
   if (command === "name") {
-    const named = await runNamingPass(world, params);
-    const out = outPath(input, flags.out, "-named.json");
-    writeFileSync(out, JSON.stringify(named, null, 2) + "\n");
-    console.log(`named world written to ${out}`);
+    const named = await runNamingPass(world, runParams(flags));
+    writeJson(input, flags.out, "-named.json", named, "named world");
   } else if (command === "types") {
-    const stats = flags.stats
-      ? (JSON.parse(readFileSync(flags.stats, "utf8")) as PopulationStats)
-      : undefined;
-    const set = await runTypingPass(world, params, stats);
-    const out = outPath(input, flags.out, "-npc-types.json");
-    writeFileSync(out, JSON.stringify(set, null, 2) + "\n");
-    console.log(`NPC type set written to ${out}`);
+    const stats = flags.stats ? readJson<PopulationStats>(flags.stats) : undefined;
+    const set = await runTypingPass(world, runParams(flags), stats);
+    writeJson(input, flags.out, "-npc-types.json", set, "NPC type set");
+  } else if (command === "businesses") {
+    writeJson(input, flags.out, "-businesses.json", exportBusinesses(world), "businesses list");
   } else {
     fail(USAGE);
   }
