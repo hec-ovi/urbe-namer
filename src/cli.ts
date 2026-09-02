@@ -77,10 +77,19 @@ async function main(): Promise<void> {
   }
 }
 
+/** Details are the report the one-line message cannot carry: missing ids, a problem list.
+ *  A cause stashed as the detail is already spelled out in the message, so it prints nothing. */
+function detailText(detail: unknown): string | undefined {
+  if (detail === undefined || detail instanceof Error) return undefined;
+  const text = JSON.stringify(detail, null, 2);
+  return text === undefined || text === "{}" || text === "[]" ? undefined : text;
+}
+
 main().catch((error: unknown) => {
   if (error instanceof NamingError) {
     console.error(`${error.code}: ${error.message}`);
-    if (error.detail !== undefined) console.error(JSON.stringify(error.detail, null, 2));
+    const detail = detailText(error.detail);
+    if (detail) console.error(detail);
   } else {
     console.error(error);
   }

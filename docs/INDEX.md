@@ -12,4 +12,6 @@
 
 No inner boxes; the folder is small enough for one agent.
 
+Tests cover the contract surface through its real entry points: the library passes, and the CLI in its own process against a stub OpenAI-compatible server.
+
 Research conclusions: docs/RESEARCH.md.

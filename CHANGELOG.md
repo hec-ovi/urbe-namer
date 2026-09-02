@@ -1,5 +1,7 @@
 # Changelog
 
+0.4.2: the CLI prints an error's report only when it has one, so a run against a server that is down ends on the one line that says so.
+
 0.4.1: runs on atlas blueprint 0.5.0; station platforms and shafts pass through with the rest of the geometry, and the pass is held to naming exactly its policy set and touching nothing else in the document.
 
 0.4.0: `npm run world -- <folder> --theme ...` names a world folder in one command: reads `blueprint.json`, writes `blueprint.named.json`, `npc-types.json` and `businesses.json` beside it, the files the engine's assembly carries into a game world.
