@@ -37,18 +37,19 @@ for (const d of districts) {
 const transit = { busStops: [], busRoutes: [], trainStations: [], trainLines: [], subwayStations: [], subwayLines: [] };
 let sid = 0;
 for (const rail of ["train", "subway"]) {
+  const level = rail === "subway" ? -12 : 0;
   for (let l = 0; l < 3; l++) {
     const stationIds = [];
     for (const d of districts) {
       if (rand() < 0.55) {
         const id = `${rail[0]}s${sid++}`;
-        transit[`${rail}Stations`].push({ id, districtId: d.id, entrances: [] });
+        transit[`${rail}Stations`].push({ id, districtId: d.id, entrances: [], level });
         stationIds.push(id);
       }
     }
     if (stationIds.length > 0) {
       transit[`${rail}Lines`].push({
-        id: `${rail[0]}l${l}`, stationIds, underground: rail === "subway",
+        id: `${rail[0]}l${l}`, stationIds, underground: rail === "subway", level,
       });
     }
   }
@@ -76,7 +77,7 @@ const perDistrict = districts.map((d) => {
 });
 
 const world = {
-  meta: { version: "0.2.0", seed: "fixture-large", units: "meters" },
+  meta: { version: "0.4.0", seed: "fixture-large", units: "meters" },
   districts,
   parcels,
   transit,

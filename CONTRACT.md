@@ -2,7 +2,7 @@
 
 Purpose: agentic pass that names every placeholder in a generated world (districts, stations, lines, businesses, civic buildings) against a theme prompt, and creates the themed dynamic NPC type strings with a prompt boilerplate each.
 
-Status: v0.2. NPC type shape is stable, simulation consumes it. World-state view tracks atlas blueprint v0.2.
+Status: v0.3. NPC type shape is stable, simulation consumes it. World-state view tracks atlas blueprint v0.4: street and rail `level` fields pass through untouched.
 
 ## In
 Two entry points, also exposed as a CLI (`npm run name`, `npm run types`).
@@ -42,11 +42,11 @@ Closed set, thrown as `NamingError { code, message, detail? }`:
 ## Invariants
 - The LLM never regenerates the world document: it returns an id-keyed name map, the harness patches and validates. Nothing outside the schema is invented; the placeholder version is never mutated.
 - Deterministic layers stay deterministic: naming adds `name` fields and a `meta.naming` block, nothing else changes.
-- Standalone: runs against the fixtures in [fixtures/](fixtures/) with no other layer present.
+- Standalone: runs against the fixtures in [fixtures/](fixtures/) with no other layer present; `atlas-city-urbe-tiny.json` is the atlas tiny sample verbatim (blueprint 0.4.0), the two `blueprint-*.json` are naming-shaped projections.
 - Every prompt and few-shot set lives in its own .md file under [prompts/](prompts/); output length is never capped.
 
 ## Depends on
-- ../atlas/CONTRACT.md (blueprint v0.2: district kinds, wealth tiers, parcel types, transit collections, stats)
+- ../atlas/CONTRACT.md (blueprint v0.4: district kinds, wealth tiers, parcel types, transit collections, stats)
 - ../simulation/CONTRACT.md (demographics; until its stats surface lands, typing grounds on atlas `stats`)
 
 ## Consumers

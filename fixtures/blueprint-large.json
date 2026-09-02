@@ -1,6 +1,6 @@
 {
   "meta": {
-    "version": "0.2.0",
+    "version": "0.4.0",
     "seed": "fixture-large",
     "units": "meters"
   },
@@ -1937,42 +1937,50 @@
       {
         "id": "ts0",
         "districtId": "d3",
-        "entrances": []
+        "entrances": [],
+        "level": 0
       },
       {
         "id": "ts1",
         "districtId": "d5",
-        "entrances": []
+        "entrances": [],
+        "level": 0
       },
       {
         "id": "ts2",
         "districtId": "d2",
-        "entrances": []
+        "entrances": [],
+        "level": 0
       },
       {
         "id": "ts3",
         "districtId": "d3",
-        "entrances": []
+        "entrances": [],
+        "level": 0
       },
       {
         "id": "ts4",
         "districtId": "d0",
-        "entrances": []
+        "entrances": [],
+        "level": 0
       },
       {
         "id": "ts5",
         "districtId": "d1",
-        "entrances": []
+        "entrances": [],
+        "level": 0
       },
       {
         "id": "ts6",
         "districtId": "d4",
-        "entrances": []
+        "entrances": [],
+        "level": 0
       },
       {
         "id": "ts7",
         "districtId": "d5",
-        "entrances": []
+        "entrances": [],
+        "level": 0
       }
     ],
     "trainLines": [
@@ -1982,7 +1990,8 @@
           "ts0",
           "ts1"
         ],
-        "underground": false
+        "underground": false,
+        "level": 0
       },
       {
         "id": "tl1",
@@ -1990,7 +1999,8 @@
           "ts2",
           "ts3"
         ],
-        "underground": false
+        "underground": false,
+        "level": 0
       },
       {
         "id": "tl2",
@@ -2000,39 +2010,46 @@
           "ts6",
           "ts7"
         ],
-        "underground": false
+        "underground": false,
+        "level": 0
       }
     ],
     "subwayStations": [
       {
         "id": "ss8",
         "districtId": "d4",
-        "entrances": []
+        "entrances": [],
+        "level": -12
       },
       {
         "id": "ss9",
         "districtId": "d5",
-        "entrances": []
+        "entrances": [],
+        "level": -12
       },
       {
         "id": "ss10",
         "districtId": "d3",
-        "entrances": []
+        "entrances": [],
+        "level": -12
       },
       {
         "id": "ss11",
         "districtId": "d4",
-        "entrances": []
+        "entrances": [],
+        "level": -12
       },
       {
         "id": "ss12",
         "districtId": "d2",
-        "entrances": []
+        "entrances": [],
+        "level": -12
       },
       {
         "id": "ss13",
         "districtId": "d4",
-        "entrances": []
+        "entrances": [],
+        "level": -12
       }
     ],
     "subwayLines": [
@@ -2042,7 +2059,8 @@
           "ss8",
           "ss9"
         ],
-        "underground": true
+        "underground": true,
+        "level": -12
       },
       {
         "id": "sl1",
@@ -2050,7 +2068,8 @@
           "ss10",
           "ss11"
         ],
-        "underground": true
+        "underground": true,
+        "level": -12
       },
       {
         "id": "sl2",
@@ -2058,7 +2077,8 @@
           "ss12",
           "ss13"
         ],
-        "underground": true
+        "underground": true,
+        "level": -12
       }
     ]
   },

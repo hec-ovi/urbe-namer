@@ -1,5 +1,5 @@
 {
-  "meta": { "version": "0.2.0", "seed": "fixture-small", "units": "meters" },
+  "meta": { "version": "0.4.0", "seed": "fixture-small", "units": "meters" },
   "districts": [
     { "id": "d0", "kind": "downtown", "tier": "high_rich", "maxFloors": 40 },
     { "id": "d1", "kind": "industrial", "tier": "poor", "maxFloors": 8 },
@@ -35,15 +35,15 @@
     ],
     "busRoutes": [{ "id": "br0", "stopIds": ["bs0", "bs1"], "edgeIds": ["e0", "e4"] }],
     "trainStations": [
-      { "id": "ts0", "districtId": "d0", "entrances": [] },
-      { "id": "ts1", "districtId": "d1", "entrances": [] }
+      { "id": "ts0", "districtId": "d0", "entrances": [], "level": 0 },
+      { "id": "ts1", "districtId": "d1", "entrances": [], "level": 0 }
     ],
-    "trainLines": [{ "id": "tl0", "stationIds": ["ts0", "ts1"], "underground": false }],
+    "trainLines": [{ "id": "tl0", "stationIds": ["ts0", "ts1"], "underground": false, "level": 0 }],
     "subwayStations": [
-      { "id": "ss0", "districtId": "d0", "entrances": [] },
-      { "id": "ss1", "districtId": "d2", "entrances": [] }
+      { "id": "ss0", "districtId": "d0", "entrances": [], "level": -12 },
+      { "id": "ss1", "districtId": "d2", "entrances": [], "level": -12 }
     ],
-    "subwayLines": [{ "id": "sl0", "stationIds": ["ss0", "ss1"], "underground": true }]
+    "subwayLines": [{ "id": "sl0", "stationIds": ["ss0", "ss1"], "underground": true, "level": -12 }]
   },
   "stats": {
     "population": 5200,

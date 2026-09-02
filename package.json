@@ -1,6 +1,6 @@
 {
   "name": "urbe-naming",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "description": "Agentic naming and NPC typing pass for urbe world states",

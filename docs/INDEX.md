@@ -7,7 +7,7 @@
   - src/validate: JSON-schema and coverage validation.
   - prompts/: every prompt and few-shot set, one .md each.
   - schema/: published JSON schemas (world-state view, params, name map, NPC types).
-  - fixtures/: standalone atlas-shaped worlds plus one explicit-placeholder world.
+  - fixtures/: the atlas tiny sample verbatim (blueprint 0.4.0), two naming-shaped worlds, one explicit-placeholder world.
 
 No inner boxes; the folder is small enough for one agent.
 

@@ -39,6 +39,20 @@ describe("runNamingPass", () => {
     expect(collect(world).some((e) => "name" in e)).toBe(false);
   });
 
+  it("runs on a full atlas blueprint (0.4.0) and changes nothing outside districts, parcels and transit", async () => {
+    const world = fixture("atlas-city-urbe-tiny.json");
+    const named = await runNamingPass(world, PARAMS, new FakeModel());
+
+    for (const key of ["meta", "streets", "blocks", "volumetric", "stats"]) {
+      expect({ ...(named[key] as object), naming: undefined }).toEqual({ ...(world[key] as object), naming: undefined });
+    }
+    const districts = named.districts as { name?: string }[];
+    const parcels = named.parcels as { type: string; name?: string }[];
+    expect(districts.every((d) => typeof d.name === "string")).toBe(true);
+    expect(parcels.filter((p) => p.type !== "residential").every((p) => typeof p.name === "string")).toBe(true);
+    expect(parcels.filter((p) => p.type === "residential").some((p) => "name" in p)).toBe(false);
+  });
+
   it("takes explicit placeholders as-is when the state pre-labels them", async () => {
     const named = await runNamingPass(fixture("world-explicit.json"), PARAMS, new FakeModel());
     const byId = new Map(collect(named).map((e) => [e.id, e]));

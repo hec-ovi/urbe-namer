@@ -1,5 +1,7 @@
 # Changelog
 
+0.3.1: runs on atlas blueprint 0.4.0; street and rail `level` fields pass through untouched, and the atlas tiny sample ships as a fixture.
+
 0.3: NPC name pool tags given names male, female or neutral in `namePool.givenByGender`; `namePool.given` stays the flat union of the three.
 
 0.2: provider layer accepts OpenAI-compatible endpoints via LLM_BASE_URL / LLM_MODEL / LLM_API_KEY (local llama.cpp servers), Claude stays the default; all parcel names share one uniqueness namespace.
