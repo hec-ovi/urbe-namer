@@ -9,11 +9,13 @@ Two passes, both a library call and a CLI, run against a local llama.cpp server 
 ```
 npm install
 npm test
+mkdir -p worlds/small
+cp ../atlas/samples/city-urbe-small.json worlds/small/blueprint.json
 npm run world -- worlds/small --theme "rain-soaked port city, 2140, corporate enclaves"
 npm run build
 ```
 
-`worlds/small/blueprint.json` is an atlas blueprint as generated (copy a sample there, or point the command at the folder the engine assembles a world in). The run writes `blueprint.named.json`, `npc-types.json` and `businesses.json` beside it and never writes `blueprint.json`, so a rerun starts from the same placeholders. Hand `blueprint.named.json` to the engine's `assemble-city`; it carries `npc-types.json` along.
+A world folder holds one `blueprint.json`, an atlas blueprint as generated; point the command at the folder the engine assembles a world in instead, and it names that one. The run writes `blueprint.named.json`, `npc-types.json` and `businesses.json` beside it and never writes `blueprint.json`, so a rerun starts from the same placeholders. Hand `blueprint.named.json` to the engine's `assemble-city`; it carries `npc-types.json` along.
 
 The steps also run one at a time on single files:
 
