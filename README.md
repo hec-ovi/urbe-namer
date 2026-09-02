@@ -39,7 +39,7 @@ Flags: `--model <id>`, `--out <file>`, and for the typing pass `--ranges '<json>
 
 ## How it works
 
-The model never regenerates the world document. It receives a charter, then chunks of nameables, and returns an id-keyed name map; the harness patches, validates and runs repair loops until coverage is complete and unique. Anything outside the schema is discarded, so a hallucinated field cannot reach the world. The deterministic layers stay deterministic: naming adds `name` fields and one metadata block, nothing else.
+The model never regenerates the world document. It receives a charter, then chunks of nameables, and returns an id-keyed name map; the harness patches, validates and runs repair loops until coverage is complete, unique and signable. Anything outside the schema is discarded, so a hallucinated field cannot reach the world. The deterministic layers stay deterministic: naming adds `name` fields and one metadata block, nothing else.
 
 Every prompt and few-shot set lives in its own `.md` file under `prompts/`, editable without touching code, and output length is never capped. `CONTRACT.md` carries the closed error set, including the coverage and range errors the repair loops raise when they cannot finish.
 
