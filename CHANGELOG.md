@@ -1,5 +1,7 @@
 # Changelog
 
+0.4.6: naming prompts ask for compact sign-ready names. Deterministic sign validation enforces the published field bound and routes invalid names through repair.
+
 0.4.5: Claude uses Anthropic's OpenAI-compatible endpoint. Every provider request omits output-token limit fields and relies on prompt shape plus validation and repair.
 
 0.4.4: the verbatim Atlas fixture is blueprint 0.14.0. The naming projection accepts the additive 0.15.0 hydrology document and preserves it with all geometry while patching names only.

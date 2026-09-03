@@ -86,13 +86,20 @@ describe("runNamingPass", () => {
     const world = fixture("blueprint-small.json");
     let repairs = 0;
     const model = new FakeModel((request) => {
+      expect(`${request.system}\n${request.user}`).not.toMatch(/\b\d+\s+characters?\b/i);
       const ids = requiredIds(request.schema);
       const isRepair = request.user.includes("came back with problems");
       if (isRepair) repairs += 1;
       const names = Object.fromEntries(
         ids.map((id) => [
           id,
-          id === "p1" && !isRepair ? "Café  Nöir " : id === "p2" && !isRepair ? "Ж Bar" : `N-${id}`,
+          id === "p1" && !isRepair
+            ? "Café  Nöir "
+            : id === "p2" && !isRepair
+              ? "Ж Bar"
+              : id === "p3" && !isRepair
+                ? "A".repeat(33)
+                : `N-${id}`,
         ]),
       );
       const wantsCharter = ((request.schema?.required as string[]) ?? []).includes("charter");
@@ -103,6 +110,7 @@ describe("runNamingPass", () => {
 
     expect(byId.get("p1")!.name).toBe("Cafe Noir");
     expect(byId.get("p2")!.name).toBe("N-p2");
+    expect(byId.get("p3")!.name).toBe("N-p3");
     expect(repairs).toBe(1);
   });
 

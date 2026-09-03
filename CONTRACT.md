@@ -2,7 +2,7 @@
 
 Purpose: agentic pass that names every placeholder in a generated world (districts, stations, lines, businesses, civic buildings) against a theme prompt, and creates the themed dynamic NPC type strings with a prompt boilerplate each.
 
-Status: v0.4.5. NPC type shape is stable, simulation consumes it. The world-state view is verified against atlas blueprint v0.14 and accepts the additive v0.15 hydrology document; everything naming does not name passes through untouched.
+Status: v0.4.6. NPC type shape is stable, simulation consumes it. The world-state view is verified against atlas blueprint v0.14 and accepts the additive v0.15 hydrology document; everything naming does not name passes through untouched.
 
 ## In
 Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run types`, `npm run businesses`), and the world folder run that chains them (`npm run world`).
