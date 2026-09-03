@@ -1,5 +1,7 @@
 # Changelog
 
+0.4.4: the verbatim Atlas fixture is blueprint 0.14.0. The naming projection accepts the additive 0.15.0 hydrology document and preserves it with all geometry while patching names only.
+
 0.4.3: the naming-shaped fixture carries the blueprint 0.5.0 station shape (position, platform, entrances, shafts), so the pass-through check covers a world with transit in it.
 
 0.4.2: the CLI prints an error's report only when it has one, so a run against a server that is down ends on the one line that says so.

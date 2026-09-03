@@ -2,7 +2,7 @@
 
 Purpose: agentic pass that names every placeholder in a generated world (districts, stations, lines, businesses, civic buildings) against a theme prompt, and creates the themed dynamic NPC type strings with a prompt boilerplate each.
 
-Status: v0.4. NPC type shape is stable, simulation consumes it. World-state view tracks atlas blueprint v0.5: everything naming does not name (street and rail `level`, station platforms and shafts, all geometry) passes through untouched.
+Status: v0.4.4. NPC type shape is stable, simulation consumes it. The world-state view is verified against atlas blueprint v0.14 and accepts the additive v0.15 hydrology document; everything naming does not name passes through untouched.
 
 ## In
 Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run types`, `npm run businesses`), and the world folder run that chains them (`npm run world`).
@@ -47,12 +47,12 @@ Closed set, thrown as `NamingError { code, message, detail? }`:
 ## Invariants
 - The LLM never regenerates the world document: it returns an id-keyed name map, the harness patches and validates. Nothing outside the schema is invented; the placeholder version is never mutated.
 - Deterministic layers stay deterministic: naming adds `name` fields and a `meta.naming` block, nothing else changes.
-- Standalone: runs against the fixtures in [fixtures/](fixtures/) with no other layer present; `atlas-city-urbe-tiny.json` is the atlas tiny sample verbatim (blueprint 0.5.0), the two `blueprint-*.json` are naming-shaped projections.
+- Standalone: runs against the fixtures in [fixtures/](fixtures/) with no other layer present; `atlas-city-urbe-tiny.json` is the atlas tiny sample verbatim (blueprint 0.14.0), the two `blueprint-*.json` are naming-shaped projections.
 - Every prompt and few-shot set lives in its own .md file under [prompts/](prompts/); output length is never capped.
 
 ## Depends on
-- ../atlas/CONTRACT.md (blueprint v0.5: district kinds, wealth tiers, parcel types, transit collections, stats)
-- ../simulation/CONTRACT.md (demographics; until its stats surface lands, typing grounds on atlas `stats`)
+- ../atlas/CONTRACT.md (blueprint v0.14 base and additive v0.15 hydrology: district kinds, wealth tiers, parcel types, transit collections, stats)
+- ../simulation/CONTRACT.md (optional population demographics; typing falls back to atlas `stats`)
 - ../materials/CONTRACT.md (rebrand request shape, letter atlas charset)
 
 ## Consumers
