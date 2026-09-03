@@ -47,4 +47,4 @@ Every prompt and few-shot set lives in its own `.md` file under `prompts/`, edit
 
 ## In the urbe family
 
-It names the world that [urbe-atlas](../urbe-atlas) generates and grounds its NPC types in [urbe-population](../urbe-population) demographics. The named world and the type set go to [urbe-population](../urbe-population), which instantiates people from them, [urbe-quests](../urbe-quests), which writes the story on top, and [urbe-engine](../urbe-engine), which shows the names in the world; the businesses list goes to [urbe-materials](../urbe-materials), which brands its ad screens with them. The full picture lives in [urbe](../urbe).
+It names the world that [atlas](../atlas) generates and grounds its NPC types in [simulation](../simulation) demographics. The named world and the type set go to [simulation](../simulation), which instantiates people from them, [quests](../quests), which writes the story on top, and [engine](../engine), which shows the names in the world; the businesses list goes to [materials](../materials), which brands its ad screens with them. The full picture lives in [urbe](..).
