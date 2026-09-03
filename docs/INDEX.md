@@ -1,6 +1,6 @@
 # Box map
 
-- root box: the naming and typing passes. Contract in CONTRACT.md; entry points `runNamingPass` / `runTypingPass` / `exportBusinesses` / `runWorld` (src/index.ts) plus the CLI (src/cli.ts).
+- root box: the naming and typing passes. Contract in CONTRACT.md; entry points `runNamingPass` / `runTypingPass` / `exportBusinesses` / `runWorld` (src/index.ts) plus the CLI (src/cli.ts). Depends on Atlas, optional Simulation demographics and the Materials rebrand shape.
   - src/world: worksheet extraction (generic placeholder walk + atlas blueprint policy), name patch-back, the world folder (fixed file names) and the pipeline that chains the passes over it.
   - src/passes: naming (charter + chunked groups + repair), typing (types + name pool), constrained output schemas.
   - src/llm: ChatModel surface and OpenAI-compatible implementation for local servers or Claude.
