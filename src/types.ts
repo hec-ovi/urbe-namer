@@ -1,5 +1,5 @@
-/** Shared types for the naming box. The world state is provisional (atlas schema pending):
- *  the extractor walks any JSON generically, so only the parts we touch are typed. */
+/** Shared types for the naming box. WorldState is the naming projection of the Atlas
+ *  CityBlueprint: only fields naming reads are typed, and the rest pass through. */
 
 export interface WorldState {
   meta: { seed: string | number; generator?: string; naming?: NamingMeta };
