@@ -8,6 +8,7 @@
     "rootDir": "src",
     "declaration": true,
     "resolveJsonModule": true,
+    "types": ["node"],
     "skipLibCheck": true
   },
   "include": ["src"]

@@ -1,6 +1,6 @@
 {
   "name": "urbe-naming",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": true,
   "type": "module",
   "description": "Agentic naming and NPC typing pass for urbe world states",
@@ -22,7 +22,6 @@
     "vitest": "^4.1.11"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.122.0",
     "ajv": "^8.20.0"
   }
 }

@@ -1,6 +1,5 @@
 import type { ChatModel } from "./llm/model.js";
 import type { NpcTypeSet, RunParams, WorldState } from "./types.js";
-import { AnthropicModel } from "./llm/anthropic.js";
 import { OpenAICompatModel } from "./llm/openai-compat.js";
 import { NamingPass, type NamingPassOptions } from "./passes/naming.js";
 import { TypingPass, type PopulationStats, type TypingPassOptions } from "./passes/typing.js";
@@ -16,10 +15,10 @@ export { NamingError, type NamingErrorCode } from "./errors.js";
 export { OpenAICompatModel } from "./llm/openai-compat.js";
 export { exportBusinesses } from "./export/businesses.js";
 
-/** The OpenAI-compatible server at LLM_BASE_URL (a local llama.cpp by default);
- *  LLM_PROVIDER=anthropic switches to Claude. */
+/** The OpenAI-compatible server at LLM_BASE_URL (a local llama.cpp by default).
+ *  LLM_PROVIDER=anthropic selects Anthropic's compatible Claude endpoint. */
 async function resolveModel(params: RunParams): Promise<ChatModel> {
-  if (process.env.LLM_PROVIDER === "anthropic") return new AnthropicModel(params.model);
+  if (process.env.LLM_PROVIDER === "anthropic") return OpenAICompatModel.fromAnthropicEnv(params.model);
   return OpenAICompatModel.fromEnv(params.model);
 }
 

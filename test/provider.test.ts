@@ -9,6 +9,9 @@ const PARAMS = { theme: "a rain-soaked dystopian megacity" };
 
 interface ChatBody {
   model: string;
+  authorization?: string;
+  max_tokens?: number;
+  max_completion_tokens?: number;
   response_format?: { type: string; json_schema?: { schema: Record<string, unknown> } };
 }
 
@@ -29,7 +32,10 @@ beforeAll(async () => {
         res.end(JSON.stringify({ data: [{ id: "stub-model" }] }));
         return;
       }
-      const request = JSON.parse(body) as ChatBody;
+      const request = {
+        ...(JSON.parse(body) as ChatBody),
+        authorization: req.headers.authorization,
+      };
       seen.push(request);
       const answer = wellBehaved({ system: "", user: "", schema: request.response_format?.json_schema?.schema });
       res.end(JSON.stringify({ choices: [{ message: { content: JSON.stringify(answer) } }] }));
@@ -69,6 +75,24 @@ describe("provider from the environment", () => {
 
     expect(named.meta.naming?.model).toBe("picked");
     expect(seen.every((request) => request.model === "picked")).toBe(true);
+  });
+
+  it("uses Claude through the compatible endpoint without an output-token limit", async () => {
+    process.env = {
+      ...savedEnv,
+      LLM_PROVIDER: "anthropic",
+      LLM_BASE_URL: baseUrl,
+      ANTHROPIC_API_KEY: "test-key",
+    };
+    delete process.env.LLM_MODEL;
+    seen.length = 0;
+
+    const named = await runNamingPass(world(), PARAMS);
+
+    expect(named.meta.naming?.model).toBe("claude-opus-5");
+    expect(seen[0]).toMatchObject({ model: "claude-opus-5", authorization: "Bearer test-key" });
+    expect(seen[0]).not.toHaveProperty("max_tokens");
+    expect(seen[0]).not.toHaveProperty("max_completion_tokens");
   });
 
   it("surfaces an unreachable server as LLM_ERROR", async () => {

@@ -25,7 +25,7 @@ npm run types -- named-world.json --theme "rain-soaked port city, 2140, corporat
 npm run businesses -- named-world.json
 ```
 
-Flags: `--model <id>`, `--out <file>`, and for the typing pass `--ranges '<json>'` (min and max types per category) and `--stats <populationStats.json>`. Provider settings come from the environment: `LLM_BASE_URL` names the OpenAI-compatible endpoint (default `http://localhost:8080/v1`), `LLM_MODEL` the served model (default: the first one the server lists), `LLM_API_KEY` is optional, and `LLM_PROVIDER=anthropic` switches to Claude. Bundled fixtures let both passes run with no other layer present.
+Flags: `--model <id>`, `--out <file>`, and for the typing pass `--ranges '<json>'` (min and max types per category) and `--stats <populationStats.json>`. Provider settings come from the environment: `LLM_BASE_URL` names the OpenAI-compatible endpoint (default `http://localhost:8080/v1`), `LLM_MODEL` the served model (default: the first one the server lists), and `LLM_API_KEY` is optional. `LLM_PROVIDER=anthropic` uses Claude through Anthropic's compatible endpoint with `ANTHROPIC_API_KEY`. Requests carry no output-token limit. Bundled fixtures let both passes run with no other layer present.
 
 ## In
 

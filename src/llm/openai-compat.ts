@@ -4,6 +4,8 @@ import { parseJson } from "./parse.js";
 
 /** A local llama.cpp server, the project's default model host. */
 const DEFAULT_BASE_URL = "http://localhost:8080/v1";
+const ANTHROPIC_BASE_URL = "https://api.anthropic.com/v1";
+const ANTHROPIC_MODEL = "claude-opus-5";
 
 /** OpenAI-compatible endpoint (local llama.cpp server and the like), configured by env:
  *  LLM_BASE_URL (root or .../v1, default a local server), LLM_MODEL (default: the first model
@@ -27,6 +29,15 @@ export class OpenAICompatModel implements ChatModel {
     const baseUrl = process.env.LLM_BASE_URL ?? DEFAULT_BASE_URL;
     const apiKey = process.env.LLM_API_KEY;
     const modelId = modelOverride ?? process.env.LLM_MODEL ?? (await firstServedModel(baseUrl, apiKey));
+    return new OpenAICompatModel(baseUrl, modelId, apiKey);
+  }
+
+  /** Claude through Anthropic's OpenAI-compatible endpoint. The compatibility surface accepts
+   *  requests without an output-token limit, like the local default provider. */
+  static fromAnthropicEnv(modelOverride?: string): OpenAICompatModel {
+    const baseUrl = process.env.LLM_BASE_URL ?? ANTHROPIC_BASE_URL;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const modelId = modelOverride ?? process.env.LLM_MODEL ?? ANTHROPIC_MODEL;
     return new OpenAICompatModel(baseUrl, modelId, apiKey);
   }
 
