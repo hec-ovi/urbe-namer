@@ -30,7 +30,7 @@ Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run type
   - `weight`: relative demographic weight within its category (positive number, consumers normalize).
   Type counts per category respect `params.ranges`; grounding only references things the world actually contains.
   The set also carries `namePool`: themed personal names, repeating across NPCs by design.
-  - `given`: flat array of every given name, at least 20 distinct. Shape mirrored by simulation's NamePool.
+  - `given`: flat array of every given name, at least 20 distinct. Simulation's compatible `NamePool` superset accepts Naming output directly.
   - `givenByGender`: `{ male, female, neutral }` string arrays holding those same names tagged, so a consumer can match a name to a body. Each name sits in exactly one list; `neutral` carries names anyone in the world bears, and a theme with no gendered names puts every given name there (individual lists may be empty). `given` is the union of the three in male, female, neutral order, derived by the harness, so tags and flat list always agree.
   - `family`: at least 20 distinct; entries may be epithets or patronymics when the theme has no family names.
 
