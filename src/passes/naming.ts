@@ -1,5 +1,5 @@
 import type { ChatModel } from "../llm/model.js";
-import type { NamedWorld, Nameable, NameMap, RunParams, WorldState } from "../types.js";
+import type { NamedWorld, Nameable, RunParams, WorldState } from "../types.js";
 import { NamingError } from "../errors.js";
 import { PromptLoader } from "../prompts/loader.js";
 import { WorksheetBuilder } from "../world/worksheet.js";

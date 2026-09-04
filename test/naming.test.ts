@@ -3,7 +3,7 @@ import { Ajv2020 as Ajv } from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
 import { runNamingPass, NamingError, type ChatModel } from "../src/index.js";
 import type { WorldState } from "../src/types.js";
-import { FakeModel, requiredIds, wellBehaved } from "./fake-model.js";
+import { FakeModel, requiredIds } from "./fake-model.js";
 
 const PARAMS = { theme: "a rain-soaked dystopian megacity" };
 const NAMED_AT = "2026-09-03T12:34:56.789Z";
