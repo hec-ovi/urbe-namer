@@ -7,7 +7,7 @@
   - src/validate: JSON-schema and coverage validation, the sign alphabet.
   - src/export: the businesses list for the materials rebrand lane.
   - prompts/: every prompt and few-shot set, one .md each.
-  - schema/: published JSON schemas (world-state view, params, NPC types, businesses).
+  - schema/: published JSON schemas (world-state input, named-world output, params, NPC types, businesses).
   - fixtures/: the atlas tiny sample verbatim (blueprint 0.14.0), two naming-shaped worlds (small carries the station shape, large the scale), one explicit-placeholder world.
 
 No inner boxes; the folder is small enough for one agent.

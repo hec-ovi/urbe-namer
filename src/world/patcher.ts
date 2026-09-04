@@ -1,13 +1,13 @@
-import type { NameMap, NamingMeta, WorldState } from "../types.js";
+import type { NamedWorld, NamedWorldMeta, NameMap, WorldState } from "../types.js";
 
 /** Applies a validated name map onto a copy of the world state: every object with
  *  `id` + `placeholder` gains `name`, the original state stays untouched. */
 export class NamePatcher {
-  apply(world: WorldState, map: NameMap, meta: NamingMeta): WorldState {
+  apply(world: WorldState, map: NameMap, meta: NamedWorldMeta): NamedWorld {
     const named = structuredClone(world);
     this.patch(named, map.names);
     named.meta = { ...named.meta, naming: meta };
-    return named;
+    return named as NamedWorld;
   }
 
   private patch(node: unknown, names: Record<string, string>): void {

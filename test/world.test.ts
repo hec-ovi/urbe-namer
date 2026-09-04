@@ -24,11 +24,12 @@ describe("runWorld", () => {
   it("writes the named world, the NPC type set and the businesses list beside blueprint.json, which it never touches", async () => {
     const before = readFileSync(join(dir, "blueprint.json"), "utf8");
     const ajv = new Ajv({ allErrors: true, strict: false });
+    ajv.addSchema(schemaFile("world-state.schema.json"));
 
     const run = await runWorld(dir, PARAMS, undefined, new FakeModel());
 
     expect(readFileSync(join(dir, "blueprint.json"), "utf8")).toBe(before);
-    expect(readJson(join(dir, "blueprint.named.json")).meta.naming).toMatchObject({ theme: PARAMS.theme });
+    expect(ajv.validate(schemaFile("named-world.schema.json"), readJson(join(dir, "blueprint.named.json")))).toBe(true);
     expect(ajv.validate(schemaFile("npc-types.schema.json"), readJson(join(dir, "npc-types.json")))).toBe(true);
     expect(ajv.validate(schemaFile("businesses.schema.json"), readJson(join(dir, "businesses.json")))).toBe(true);
     expect(run.businesses.length).toBeGreaterThan(0);

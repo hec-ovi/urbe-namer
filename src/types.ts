@@ -12,6 +12,15 @@ export interface NamingMeta {
   namedAt: string;
 }
 
+export interface NamedWorldMeta extends NamingMeta {
+  model: string;
+}
+
+/** Public value returned by the naming pass. */
+export interface NamedWorld extends WorldState {
+  meta: WorldState["meta"] & { naming: NamedWorldMeta };
+}
+
 /** One placeholder entity, flattened for the LLM worksheet. */
 export interface Nameable {
   id: string;

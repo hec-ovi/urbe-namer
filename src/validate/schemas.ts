@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Ajv2020 as Ajv, type ValidateFunction } from "ajv/dist/2020.js";
 import { NamingError, type NamingErrorCode } from "../errors.js";
@@ -10,11 +10,18 @@ export class SchemaValidator {
   private readonly ajv = new Ajv({ allErrors: true, strict: false });
   private readonly validators = new Map<string, ValidateFunction>();
 
+  constructor() {
+    for (const schemaFile of readdirSync(SCHEMA_DIR).filter((file) => file.endsWith(".schema.json"))) {
+      const path = fileURLToPath(new URL(schemaFile, SCHEMA_DIR));
+      this.ajv.addSchema(JSON.parse(readFileSync(path, "utf8")), schemaFile);
+    }
+  }
+
   assert(schemaFile: string, value: unknown, code: NamingErrorCode, what: string): void {
     let validate = this.validators.get(schemaFile);
     if (!validate) {
-      const path = fileURLToPath(new URL(schemaFile, SCHEMA_DIR));
-      validate = this.ajv.compile(JSON.parse(readFileSync(path, "utf8")));
+      validate = this.ajv.getSchema(schemaFile);
+      if (!validate) throw new NamingError(code, `${what} schema is unavailable: ${schemaFile}`);
       this.validators.set(schemaFile, validate);
     }
     if (!validate(value)) {

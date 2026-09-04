@@ -1,12 +1,12 @@
 import type { ChatModel } from "../llm/model.js";
-import type { Business, NpcTypeSet, RunParams, WorldState } from "../types.js";
+import type { Business, NamedWorld, NpcTypeSet, RunParams } from "../types.js";
 import { exportBusinesses } from "../export/businesses.js";
 import { NamingPass } from "../passes/naming.js";
 import { TypingPass, type PopulationStats } from "../passes/typing.js";
 import type { WorldFolder } from "./folder.js";
 
 export interface WorldRun {
-  named: WorldState;
+  named: NamedWorld;
   types: NpcTypeSet;
   businesses: Business[];
 }

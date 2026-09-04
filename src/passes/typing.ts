@@ -1,8 +1,9 @@
 import type { ChatModel } from "../llm/model.js";
-import type { NamePool, NpcType, NpcTypeSet, RunParams, WorldState } from "../types.js";
+import type { NamedWorld, NamePool, NpcType, NpcTypeSet, RunParams } from "../types.js";
 import { NamingError } from "../errors.js";
 import { PromptLoader } from "../prompts/loader.js";
 import { SchemaValidator } from "../validate/schemas.js";
+import { NamedWorldValidator } from "../validate/named-world.js";
 import { typingOutputSchema } from "./output-schemas.js";
 import { asArray } from "../json.js";
 
@@ -41,6 +42,7 @@ export interface TypingPassOptions {
 export class TypingPass {
   private readonly prompts = new PromptLoader();
   private readonly schemas = new SchemaValidator();
+  private readonly namedWorlds: NamedWorldValidator = new NamedWorldValidator();
   private readonly maxRepairRounds: number;
 
   constructor(
@@ -50,7 +52,7 @@ export class TypingPass {
     this.maxRepairRounds = options.maxRepairRounds ?? 2;
   }
 
-  async run(world: WorldState, params: RunParams, stats?: PopulationStats): Promise<NpcTypeSet> {
+  async run(world: NamedWorld, params: RunParams, stats?: PopulationStats): Promise<NpcTypeSet> {
     if (!params.theme || params.theme.trim() === "") {
       throw new NamingError("INVALID_PARAMS", "theme is required");
     }
@@ -60,10 +62,7 @@ export class TypingPass {
         throw new NamingError("INVALID_PARAMS", `range for ${category}: min ${range.min} > max ${range.max}`);
       }
     }
-    this.schemas.assert("world-state.schema.json", world, "INVALID_WORLD", "world state");
-    if (!world.meta.naming) {
-      throw new NamingError("INVALID_WORLD", "typing pass needs a named world (run the naming pass first)");
-    }
+    this.namedWorlds.assert(world, "INVALID_WORLD");
 
     const ground = this.grounding(world);
     const summary = this.summarize(world, ground, stats);
@@ -125,7 +124,7 @@ export class TypingPass {
   }
 
   /** What the world actually contains: the closed reference space for grounding. */
-  private grounding(world: WorldState) {
+  private grounding(world: NamedWorld) {
     const districts = asArray(world.districts);
     const parcels = asArray(world.parcels);
     return {
@@ -136,7 +135,7 @@ export class TypingPass {
   }
 
   private summarize(
-    world: WorldState,
+    world: NamedWorld,
     ground: ReturnType<TypingPass["grounding"]>,
     stats?: PopulationStats,
   ): string {

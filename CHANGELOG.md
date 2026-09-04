@@ -1,5 +1,7 @@
 # Changelog
 
+0.4.7: named worlds have a dedicated output schema with required theme, model and timestamp metadata. Public naming, typing and business entry points validate the structure and exact selected-name coverage.
+
 0.4.6: naming prompts ask for compact sign-ready names. Deterministic sign validation enforces the published field bound and routes invalid names through repair.
 
 0.4.5: Claude uses Anthropic's OpenAI-compatible endpoint. Every provider request omits output-token limit fields and relies on prompt shape plus validation and repair.

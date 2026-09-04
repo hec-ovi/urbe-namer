@@ -1,10 +1,17 @@
 import { readFileSync } from "node:fs";
+import { Ajv2020 as Ajv } from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
-import { runNamingPass, NamingError } from "../src/index.js";
+import { runNamingPass, NamingError, type ChatModel } from "../src/index.js";
 import type { WorldState } from "../src/types.js";
 import { FakeModel, requiredIds, wellBehaved } from "./fake-model.js";
 
 const PARAMS = { theme: "a rain-soaked dystopian megacity" };
+
+const ajv = new Ajv({ allErrors: true, strict: false });
+ajv.addSchema(JSON.parse(readFileSync(new URL("../schema/world-state.schema.json", import.meta.url), "utf8")));
+const validateNamedWorld = ajv.compile(
+  JSON.parse(readFileSync(new URL("../schema/named-world.schema.json", import.meta.url), "utf8")),
+);
 
 function fixture(name: string): WorldState {
   return JSON.parse(readFileSync(new URL(`../fixtures/${name}`, import.meta.url), "utf8"));
@@ -72,6 +79,32 @@ describe("runNamingPass", () => {
     const byId = new Map(collect(named).map((e) => [e.id, e]));
     expect(byId.get("p0")!.name).toBe("N-p0");
     expect(byId.get("p2")!.name).toBeUndefined();
+  });
+
+  it("returns the published named-world schema with required model metadata and explicit name coverage", async () => {
+    const named = await runNamingPass(fixture("world-explicit.json"), PARAMS, new FakeModel());
+    expect(validateNamedWorld(named)).toBe(true);
+
+    const withoutModel = structuredClone(named);
+    delete (withoutModel.meta.naming as { model?: string }).model;
+    expect(validateNamedWorld(withoutModel)).toBe(false);
+    expect(validateNamedWorld.errors).toEqual(expect.arrayContaining([expect.objectContaining({ keyword: "required" })]));
+
+    const withoutName = structuredClone(named);
+    delete (collect(withoutName).find((entity) => entity.id === "p0") as { name?: string }).name;
+    expect(validateNamedWorld(withoutName)).toBe(false);
+    expect(validateNamedWorld.errors).toEqual(expect.arrayContaining([expect.objectContaining({ keyword: "required" })]));
+  });
+
+  it("rejects incomplete model metadata at the public output boundary", async () => {
+    const delegate = new FakeModel();
+    const model: ChatModel = {
+      id: "",
+      completeJSON: (request) => delegate.completeJSON(request),
+    };
+
+    await expect(runNamingPass(fixture("blueprint-small.json"), PARAMS, model))
+      .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
   });
 
   it("covers a large world across chunked parallel calls", async () => {

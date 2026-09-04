@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { exportBusinesses, runNamingPass } from "../src/index.js";
-import type { WorldState } from "../src/types.js";
+import type { NamedWorld, WorldState } from "../src/types.js";
 import { FakeModel } from "./fake-model.js";
 
 const PARAMS = { theme: "a rain-soaked dystopian megacity" };
@@ -11,7 +11,7 @@ function fixture(): WorldState {
   return JSON.parse(readFileSync(new URL("../fixtures/blueprint-small.json", import.meta.url), "utf8"));
 }
 
-let namedWorld: WorldState;
+let namedWorld: NamedWorld;
 
 beforeAll(async () => {
   namedWorld = await runNamingPass(fixture(), PARAMS, new FakeModel());
@@ -31,7 +31,7 @@ describe("exportBusinesses", () => {
   });
 
   it("rejects a world that has not been named", () => {
-    expect(() => exportBusinesses(fixture())).toThrow(expect.objectContaining({ code: "INVALID_WORLD" }));
+    expect(() => exportBusinesses(fixture() as NamedWorld)).toThrow(expect.objectContaining({ code: "INVALID_WORLD" }));
   });
 
   it("rejects a brand name outside the sign alphabet", () => {

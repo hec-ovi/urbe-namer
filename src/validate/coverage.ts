@@ -1,4 +1,4 @@
-import type { Nameable } from "../types.js";
+import type { Nameable, WorldState } from "../types.js";
 import { spellsOnSign } from "./sign.js";
 
 /** Uniqueness namespace: all parcels share one (a hotel and a mall must not collide);
@@ -70,5 +70,25 @@ export class CoverageValidator {
 
     const ok = missing.length + invented.length + empty.length + unsignable.length + duplicated.length === 0;
     return { ok, missing, invented, empty, unsignable, duplicated };
+  }
+
+  /** Checks the names actually present on the returned world, after patching. */
+  checkWorld(worksheet: Nameable[], world: WorldState): CoverageReport {
+    const wanted = new Set(worksheet.map((entity) => entity.id));
+    const names: Record<string, string> = {};
+    const visit = (node: unknown): void => {
+      if (Array.isArray(node)) {
+        for (const item of node) visit(item);
+        return;
+      }
+      if (node === null || typeof node !== "object") return;
+      const value = node as Record<string, unknown>;
+      if (typeof value.id === "string" && wanted.has(value.id) && typeof value.name === "string") {
+        names[value.id] = value.name;
+      }
+      for (const child of Object.values(value)) visit(child);
+    };
+    visit(world);
+    return this.check(worksheet, names);
   }
 }

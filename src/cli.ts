@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { exportBusinesses, runNamingPass, runTypingPass, runWorld, NamingError } from "./index.js";
 import type { PopulationStats } from "./passes/typing.js";
-import type { RunParams, WorldState } from "./types.js";
+import type { NamedWorld, RunParams, WorldState } from "./types.js";
 import { WORLD_FILES } from "./world/folder.js";
 
 const USAGE = `usage:
@@ -68,10 +68,10 @@ async function main(): Promise<void> {
     const named = await runNamingPass(readJson<WorldState>(input), runParams(flags));
     writeJson(input, flags.out, "-named.json", named, "named world");
   } else if (command === "types") {
-    const set = await runTypingPass(readJson<WorldState>(input), runParams(flags), readStats(flags));
+    const set = await runTypingPass(readJson<NamedWorld>(input), runParams(flags), readStats(flags));
     writeJson(input, flags.out, "-npc-types.json", set, "NPC type set");
   } else if (command === "businesses") {
-    writeJson(input, flags.out, "-businesses.json", exportBusinesses(readJson<WorldState>(input)), "businesses list");
+    writeJson(input, flags.out, "-businesses.json", exportBusinesses(readJson<NamedWorld>(input)), "businesses list");
   } else {
     fail(USAGE);
   }

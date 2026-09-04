@@ -1,5 +1,5 @@
 import type { ChatModel } from "../llm/model.js";
-import type { Nameable, NameMap, RunParams, WorldState } from "../types.js";
+import type { NamedWorld, Nameable, NameMap, RunParams, WorldState } from "../types.js";
 import { NamingError } from "../errors.js";
 import { PromptLoader } from "../prompts/loader.js";
 import { WorksheetBuilder } from "../world/worksheet.js";
@@ -7,6 +7,7 @@ import { NamePatcher } from "../world/patcher.js";
 import { CoverageValidator, namespaceOf } from "../validate/coverage.js";
 import { foldForSign } from "../validate/sign.js";
 import { SchemaValidator } from "../validate/schemas.js";
+import { NamedWorldValidator } from "../validate/named-world.js";
 import { fewshotFile } from "./fewshots.js";
 import { chunkOutputSchema, districtsOutputSchema } from "./output-schemas.js";
 
@@ -31,6 +32,7 @@ export class NamingPass {
   private readonly patcher = new NamePatcher();
   private readonly coverage = new CoverageValidator();
   private readonly schemas = new SchemaValidator();
+  private readonly namedWorlds: NamedWorldValidator = new NamedWorldValidator();
   private readonly chunkSize: number;
   private readonly maxRepairRounds: number;
 
@@ -42,7 +44,7 @@ export class NamingPass {
     this.maxRepairRounds = options.maxRepairRounds ?? 2;
   }
 
-  async run(world: WorldState, params: RunParams): Promise<WorldState> {
+  async run(world: WorldState, params: RunParams): Promise<NamedWorld> {
     if (!params.theme || params.theme.trim() === "") {
       throw new NamingError("INVALID_PARAMS", "theme is required");
     }
@@ -80,7 +82,7 @@ export class NamingPass {
       { names },
       { theme: params.theme, model: this.model.id, namedAt: new Date().toISOString() },
     );
-    this.schemas.assert("world-state.schema.json", named, "COVERAGE_ERROR", "named world state");
+    this.namedWorlds.assert(named, "COVERAGE_ERROR", worksheet);
     return named;
   }
 

@@ -2,7 +2,7 @@
 
 Purpose: agentic pass that names every placeholder in a generated world (districts, stations, lines, businesses, civic buildings) against a theme prompt, and creates the themed dynamic NPC type strings with a prompt boilerplate each.
 
-Status: v0.4.6. NPC type shape is stable, simulation consumes it. The world-state view is verified against atlas blueprint v0.14 and accepts the additive v0.15 hydrology document; everything naming does not name passes through untouched.
+Status: v0.4.7. NPC type shape is stable, simulation consumes it. The world-state view is verified against atlas blueprint v0.14 and accepts the additive v0.15 hydrology document; everything naming does not name passes through untouched.
 
 ## In
 Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run types`, `npm run businesses`), and the world folder run that chains them (`npm run world`).
@@ -19,7 +19,7 @@ Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run type
 - Provider, from the environment: an OpenAI-compatible chat endpoint at `LLM_BASE_URL` (default `http://localhost:8080/v1`, a local llama.cpp server), model `LLM_MODEL` (default: the first model the server lists at `/v1/models`), `LLM_API_KEY` optional; `params.model` overrides the model per run. `LLM_PROVIDER=anthropic` uses Anthropic's compatible endpoint with `ANTHROPIC_API_KEY` and model `claude-opus-5` unless overridden. Provider requests carry no output-token limit.
 
 ## Out
-- Named world: the input state, untouched except every nameable gains `name` and `meta.naming` records `{theme, model, namedAt}`. Saved alongside the placeholder version, never over it. Names are unique case-insensitively within their namespace: all parcels share one namespace, districts and each transit kind keep their own (an interchange may reuse a station name across modes); themed chains stay possible through branch-qualified names. Every name spells in the sign alphabet (the materials letter atlas: letters, digits, space and `- . , ' ! ? : / & +`, 32 characters at most), so signs and screens letter it verbatim; accented letters the model returns fold onto their base letter, anything else goes through repair.
+- Named world: [schema/named-world.schema.json](schema/named-world.schema.json). The input state is untouched except every selected nameable gains `name` and `meta.naming` records `{theme, model, namedAt}`. Saved alongside the placeholder version, never over it. Names are unique case-insensitively within their namespace: all parcels share one namespace, districts and each transit kind keep their own (an interchange may reuse a station name across modes); themed chains stay possible through branch-qualified names. Every name spells in the sign alphabet (the materials letter atlas: letters, digits, space and `- . , ' ! ? : / & +`, 32 characters at most), so signs and screens letter it verbatim; accented letters the model returns fold onto their base letter, anything else goes through repair.
 - NPC type set: [schema/npc-types.schema.json](schema/npc-types.schema.json). Each type:
   - `type`: unique machine string (`^[a-z][a-z0-9_]*$`), e.g. `dock_smuggler`.
   - `label`: display name.
@@ -38,10 +38,10 @@ Two passes plus one export, also exposed as a CLI (`npm run name`, `npm run type
 
 ## Errors
 Closed set, thrown as `NamingError { code, message, detail? }`:
-- `INVALID_WORLD`: input fails the world-state schema, exposes nothing nameable, or has duplicate nameable ids; for the export, a world without names or with a business name outside the sign alphabet; for the world run, a folder without `blueprint.json`.
+- `INVALID_WORLD`: an input world or named-world consumer input fails its schema or selected-name coverage, exposes nothing nameable, or has duplicate nameable ids; for the world run, a folder without `blueprint.json`.
 - `INVALID_PARAMS`: missing or empty theme, malformed ranges.
 - `LLM_ERROR`: provider failure after retries.
-- `COVERAGE_ERROR`: repair loop exhausted; naming still incomplete, duplicated or outside the sign alphabet, or typing output stays ungrounded (references the world lacks, name pool below minimum).
+- `COVERAGE_ERROR`: repair loop exhausted; naming output is incomplete, lacks required metadata, is duplicated or outside the sign alphabet, or typing output stays ungrounded (references the world lacks, name pool below minimum).
 - `RANGE_ERROR`: typing pass produced type counts outside `[min, max]` after repair.
 
 ## Invariants

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urbe/naming/named-world",
+  "title": "Named world produced by the naming pass",
+  "description": "The input world preserved with complete selected-name coverage and required naming metadata. Exact policy coverage and namespace uniqueness are validated at the public boundary.",
+  "allOf": [
+    { "$ref": "./world-state" },
+    {
+      "type": "object",
+      "required": ["meta"],
+      "properties": {
+        "meta": {
+          "type": "object",
+          "required": ["naming"],
+          "properties": {
+            "naming": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["theme", "model", "namedAt"],
+              "properties": {
+                "theme": { "type": "string", "minLength": 1 },
+                "model": { "type": "string", "minLength": 1 },
+                "namedAt": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    { "$ref": "#/$defs/explicitNameCoverage" }
+  ],
+  "$defs": {
+    "explicitNameCoverage": {
+      "allOf": [
+        {
+          "if": { "type": "object" },
+          "then": {
+            "allOf": [
+              {
+                "if": { "required": ["id", "placeholder"] },
+                "then": {
+                  "required": ["name"],
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1 }
+                  }
+                }
+              },
+              { "additionalProperties": { "$ref": "#/$defs/explicitNameCoverage" } }
+            ]
+          }
+        },
+        {
+          "if": { "type": "array" },
+          "then": { "items": { "$ref": "#/$defs/explicitNameCoverage" } }
+        }
+      ]
+    }
+  }
+}

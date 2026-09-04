@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { runNamingPass, runTypingPass } from "../src/index.js";
-import type { WorldState } from "../src/types.js";
+import type { NamedWorld, WorldState } from "../src/types.js";
 import type { PopulationStats } from "../src/passes/typing.js";
 import { FakeModel, FAMILY, GOOD_TYPES, POOL } from "./fake-model.js";
 
@@ -17,7 +17,7 @@ const STATS: PopulationStats = {
   ],
 };
 
-let namedWorld: WorldState;
+let namedWorld: NamedWorld;
 
 beforeAll(async () => {
   const world = JSON.parse(
@@ -109,7 +109,20 @@ describe("runTypingPass", () => {
     const raw = JSON.parse(
       readFileSync(new URL("../fixtures/blueprint-small.json", import.meta.url), "utf8"),
     ) as WorldState;
-    await expect(runTypingPass(raw, PARAMS, undefined, new FakeModel()))
+    await expect(runTypingPass(raw as NamedWorld, PARAMS, undefined, new FakeModel()))
+      .rejects.toMatchObject({ code: "INVALID_WORLD" });
+  });
+
+  it("keeps malformed named-world errors inside the closed error set", async () => {
+    await expect(runTypingPass(null as unknown as NamedWorld, PARAMS, undefined, new FakeModel()))
+      .rejects.toMatchObject({ code: "INVALID_WORLD" });
+  });
+
+  it("rejects a named world missing one selected name", async () => {
+    const partial = structuredClone(namedWorld);
+    delete ((partial.parcels as { id: string; name?: string }[]).find((parcel) => parcel.id === "p0")!).name;
+
+    await expect(runTypingPass(partial, PARAMS, undefined, new FakeModel()))
       .rejects.toMatchObject({ code: "INVALID_WORLD" });
   });
 });
