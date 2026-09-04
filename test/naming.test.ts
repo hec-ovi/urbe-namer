@@ -6,8 +6,16 @@ import type { WorldState } from "../src/types.js";
 import { FakeModel, requiredIds, wellBehaved } from "./fake-model.js";
 
 const PARAMS = { theme: "a rain-soaked dystopian megacity" };
+const NAMED_AT = "2026-09-03T12:34:56.789Z";
 
 const ajv = new Ajv({ allErrors: true, strict: false });
+ajv.addFormat("date-time", {
+  type: "string",
+  validate: (value: string) => {
+    const parsed = new Date(value);
+    return !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value;
+  },
+});
 ajv.addSchema(JSON.parse(readFileSync(new URL("../schema/world-state.schema.json", import.meta.url), "utf8")));
 const validateNamedWorld = ajv.compile(
   JSON.parse(readFileSync(new URL("../schema/named-world.schema.json", import.meta.url), "utf8")),
@@ -70,18 +78,21 @@ describe("runNamingPass", () => {
       expect(namedIds).toEqual(policyIds(world));
       expect(stripped).toEqual(world);
       expect(named.meta.naming).toMatchObject({ theme: PARAMS.theme, model: "fake-model" });
-      expect(typeof named.meta.naming!.namedAt).toBe("string");
+      expect(new Date(named.meta.naming.namedAt).toISOString()).toBe(named.meta.naming.namedAt);
     },
   );
 
   it("takes explicit placeholders as-is when the state pre-labels them", async () => {
-    const named = await runNamingPass(fixture("world-explicit.json"), PARAMS, new FakeModel());
+    const world = fixture("world-explicit.json");
+    ((world.parcels as { id: string; type: string }[]).find((parcel) => parcel.id === "p2")!).type = "offices";
+    const named = await runNamingPass(world, PARAMS, new FakeModel());
     const byId = new Map(collect(named).map((e) => [e.id, e]));
     expect(byId.get("p0")!.name).toBe("N-p0");
     expect(byId.get("p2")!.name).toBeUndefined();
+    expect(validateNamedWorld(named)).toBe(true);
   });
 
-  it("returns the published named-world schema with required model metadata and explicit name coverage", async () => {
+  it("returns the published named-world schema with required metadata and explicit name coverage", async () => {
     const named = await runNamingPass(fixture("world-explicit.json"), PARAMS, new FakeModel());
     expect(validateNamedWorld(named)).toBe(true);
 
@@ -93,6 +104,21 @@ describe("runNamingPass", () => {
     const withoutName = structuredClone(named);
     delete (collect(withoutName).find((entity) => entity.id === "p0") as { name?: string }).name;
     expect(validateNamedWorld(withoutName)).toBe(false);
+    expect(validateNamedWorld.errors).toEqual(expect.arrayContaining([expect.objectContaining({ keyword: "required" })]));
+
+    for (const namedAt of ["not-a-timestamp", "2026-02-31T12:34:56.789Z"]) {
+      const invalidTimestamp = structuredClone(named);
+      invalidTimestamp.meta.naming.namedAt = namedAt;
+      expect(validateNamedWorld(invalidTimestamp)).toBe(false);
+      expect(validateNamedWorld.errors).toEqual(expect.arrayContaining([expect.objectContaining({ keyword: "format" })]));
+    }
+  });
+
+  it("does not validate a policy world with metadata but none of its selected names", () => {
+    const raw = fixture("blueprint-small.json");
+    raw.meta.naming = { theme: PARAMS.theme, model: "fake-model", namedAt: NAMED_AT };
+
+    expect(validateNamedWorld(raw)).toBe(false);
     expect(validateNamedWorld.errors).toEqual(expect.arrayContaining([expect.objectContaining({ keyword: "required" })]));
   });
 

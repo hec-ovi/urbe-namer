@@ -34,6 +34,20 @@ describe("exportBusinesses", () => {
     expect(() => exportBusinesses(fixture() as NamedWorld)).toThrow(expect.objectContaining({ code: "INVALID_WORLD" }));
   });
 
+  it("rejects a policy world with valid metadata but zero selected names", () => {
+    const raw = fixture();
+    raw.meta.naming = structuredClone(namedWorld.meta.naming);
+
+    expect(() => exportBusinesses(raw as NamedWorld)).toThrow(expect.objectContaining({ code: "INVALID_WORLD" }));
+  });
+
+  it.each(["not-a-timestamp", "2026-02-31T12:34:56.789Z"])("rejects invalid named-world timestamp metadata: %s", (namedAt) => {
+    const invalid = structuredClone(namedWorld);
+    invalid.meta.naming.namedAt = namedAt;
+
+    expect(() => exportBusinesses(invalid)).toThrow(expect.objectContaining({ code: "INVALID_WORLD" }));
+  });
+
   it("rejects a brand name outside the sign alphabet", () => {
     const world = structuredClone(namedWorld);
     const hotel = (world.parcels as { type: string; name: string }[]).find((p) => p.type === "hotel")!;

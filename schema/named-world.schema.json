@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urbe/naming/named-world",
   "title": "Named world produced by the naming pass",
-  "description": "The input world preserved with complete selected-name coverage and required naming metadata. Exact policy coverage and namespace uniqueness are validated at the public boundary.",
+  "description": "The input world preserved with complete selected-name coverage and required naming metadata. Namespace uniqueness and signability are also validated at the public boundary.",
   "allOf": [
     { "$ref": "./world-state" },
     {
@@ -20,16 +20,55 @@
               "properties": {
                 "theme": { "type": "string", "minLength": 1 },
                 "model": { "type": "string", "minLength": 1 },
-                "namedAt": { "type": "string", "minLength": 1 }
+                "namedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+                }
               }
             }
           }
         }
       }
     },
-    { "$ref": "#/$defs/explicitNameCoverage" }
+    { "$ref": "#/$defs/explicitNameCoverage" },
+    {
+      "if": { "$ref": "#/$defs/hasExplicitPlaceholder" },
+      "else": { "$ref": "#/$defs/policyNameCoverage" }
+    }
   ],
   "$defs": {
+    "namedEntity": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "hasExplicitPlaceholder": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": ["id", "placeholder"],
+          "properties": {
+            "id": { "type": "string" },
+            "placeholder": { "type": "string" }
+          }
+        },
+        {
+          "type": "array",
+          "contains": { "$ref": "#/$defs/hasExplicitPlaceholder" }
+        },
+        {
+          "type": "object",
+          "not": {
+            "additionalProperties": {
+              "not": { "$ref": "#/$defs/hasExplicitPlaceholder" }
+            }
+          }
+        }
+      ]
+    },
     "explicitNameCoverage": {
       "allOf": [
         {
@@ -37,13 +76,14 @@
           "then": {
             "allOf": [
               {
-                "if": { "required": ["id", "placeholder"] },
-                "then": {
-                  "required": ["name"],
+                "if": {
+                  "required": ["id", "placeholder"],
                   "properties": {
-                    "name": { "type": "string", "minLength": 1 }
+                    "id": { "type": "string" },
+                    "placeholder": { "type": "string" }
                   }
-                }
+                },
+                "then": { "$ref": "#/$defs/namedEntity" }
               },
               { "additionalProperties": { "$ref": "#/$defs/explicitNameCoverage" } }
             ]
@@ -54,6 +94,38 @@
           "then": { "items": { "$ref": "#/$defs/explicitNameCoverage" } }
         }
       ]
+    },
+    "policyNameCoverage": {
+      "type": "object",
+      "properties": {
+        "districts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/namedEntity" }
+        },
+        "parcels": {
+          "type": "array",
+          "items": {
+            "if": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": { "not": { "const": "residential" } }
+              }
+            },
+            "then": { "$ref": "#/$defs/namedEntity" }
+          }
+        },
+        "transit": {
+          "type": "object",
+          "properties": {
+            "busRoutes": { "type": "array", "items": { "$ref": "#/$defs/namedEntity" } },
+            "trainStations": { "type": "array", "items": { "$ref": "#/$defs/namedEntity" } },
+            "trainLines": { "type": "array", "items": { "$ref": "#/$defs/namedEntity" } },
+            "subwayStations": { "type": "array", "items": { "$ref": "#/$defs/namedEntity" } },
+            "subwayLines": { "type": "array", "items": { "$ref": "#/$defs/namedEntity" } }
+          }
+        }
+      }
     }
   }
 }

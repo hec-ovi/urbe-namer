@@ -118,6 +118,24 @@ describe("runTypingPass", () => {
       .rejects.toMatchObject({ code: "INVALID_WORLD" });
   });
 
+  it("rejects a policy world with valid metadata but zero selected names", async () => {
+    const raw = JSON.parse(
+      readFileSync(new URL("../fixtures/blueprint-small.json", import.meta.url), "utf8"),
+    ) as WorldState;
+    raw.meta.naming = structuredClone(namedWorld.meta.naming);
+
+    await expect(runTypingPass(raw as NamedWorld, PARAMS, undefined, new FakeModel()))
+      .rejects.toMatchObject({ code: "INVALID_WORLD" });
+  });
+
+  it.each(["not-a-timestamp", "2026-02-31T12:34:56.789Z"])("rejects invalid named-world timestamp metadata: %s", async (namedAt) => {
+    const invalid = structuredClone(namedWorld);
+    invalid.meta.naming.namedAt = namedAt;
+
+    await expect(runTypingPass(invalid, PARAMS, undefined, new FakeModel()))
+      .rejects.toMatchObject({ code: "INVALID_WORLD" });
+  });
+
   it("rejects a named world missing one selected name", async () => {
     const partial = structuredClone(namedWorld);
     delete ((partial.parcels as { id: string; name?: string }[]).find((parcel) => parcel.id === "p0")!).name;

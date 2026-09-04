@@ -7,7 +7,8 @@ const SCHEMA_DIR = new URL("../../schema/", import.meta.url);
 
 /** Validates inputs and outputs against the JSON schemas in schema/. */
 export class SchemaValidator {
-  private readonly ajv = new Ajv({ allErrors: true, strict: false });
+  private readonly ajv = new Ajv({ allErrors: true, strict: false })
+    .addFormat("date-time", { type: "string", validate: isIsoTimestamp });
   private readonly validators = new Map<string, ValidateFunction>();
 
   constructor() {
@@ -31,4 +32,9 @@ export class SchemaValidator {
       throw new NamingError(code, `${what} failed schema validation: ${errors}`, validate.errors);
     }
   }
+}
+
+function isIsoTimestamp(value: string): boolean {
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value;
 }

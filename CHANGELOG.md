@@ -1,5 +1,7 @@
 # Changelog
 
+0.4.8: the named-world output schema covers both explicit-placeholder and Atlas policy selection, requires every selected name, and carries a canonical UTC naming timestamp. Named-world consumers enforce that schema before use.
+
 0.4.7: named worlds have a dedicated output schema with required theme, model and timestamp metadata. Public naming, typing and business entry points validate the structure and exact selected-name coverage.
 
 0.4.6: naming prompts ask for compact sign-ready names. Deterministic sign validation enforces the published field bound and routes invalid names through repair.
