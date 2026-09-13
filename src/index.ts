@@ -5,6 +5,7 @@ import { NamingPass, type NamingPassOptions } from "./passes/naming.js";
 import { TypingPass, type PopulationStats, type TypingPassOptions } from "./passes/typing.js";
 import { WorldFolder } from "./world/folder.js";
 import { WorldPipeline, type WorldRun } from "./world/pipeline.js";
+import { SchemaValidator } from "./validate/schemas.js";
 
 export type { ChatModel, ChatRequest } from "./llm/model.js";
 export type { Business, NamedWorld, NamedWorldMeta, NameGender, NamePool, Nameable, NpcType, NpcTypeSet, RunParams, WorldState } from "./types.js";
@@ -18,6 +19,7 @@ export { exportBusinesses } from "./export/businesses.js";
 /** The OpenAI-compatible server at LLM_BASE_URL (a local llama.cpp by default).
  *  LLM_PROVIDER=anthropic selects Anthropic's compatible Claude endpoint. */
 async function resolveModel(params: RunParams): Promise<ChatModel> {
+  new SchemaValidator().params(params);
   if (process.env.LLM_PROVIDER === "anthropic") return OpenAICompatModel.fromAnthropicEnv(params.model);
   return OpenAICompatModel.fromEnv(params.model);
 }

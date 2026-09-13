@@ -40,14 +40,13 @@ export class NamingPass {
     private readonly model: ChatModel,
     options: NamingPassOptions = {},
   ) {
+    this.schemas.options(options);
     this.chunkSize = options.chunkSize ?? 30;
     this.maxRepairRounds = options.maxRepairRounds ?? 2;
   }
 
   async run(world: WorldState, params: RunParams): Promise<NamedWorld> {
-    if (!params.theme || params.theme.trim() === "") {
-      throw new NamingError("INVALID_PARAMS", "theme is required");
-    }
+    this.schemas.params(params);
     this.schemas.assert("world-state.schema.json", world, "INVALID_WORLD", "world state");
 
     const worksheet = this.worksheets.build(world);
@@ -93,7 +92,7 @@ export class NamingPass {
       entities: worksheetJson(districts),
     });
     const raw = await this.completeMap(user, districtsOutputSchema(districts.map((d) => d.id)));
-    const charter = typeof (raw as DistrictsResult).charter === "string" ? (raw as DistrictsResult).charter : "";
+    const charter = typeof (raw as DistrictsResult | null)?.charter === "string" ? (raw as DistrictsResult).charter : "";
     const names = extractNames(raw);
     const report = this.coverage.check(districts, names);
     if (!report.ok || charter.trim() === "") {

@@ -1,6 +1,7 @@
 import { NamingError } from "../errors.js";
 import type { ChatModel, ChatRequest } from "./model.js";
 import { parseJson } from "./parse.js";
+import { chatContent } from "./response.js";
 
 /** A local llama.cpp server, the project's default model host. */
 const DEFAULT_BASE_URL = "http://localhost:8080/v1";
@@ -44,6 +45,7 @@ export class OpenAICompatModel implements ChatModel {
   async completeJSON(request: ChatRequest): Promise<unknown> {
     const body = {
       model: this.id,
+      stream: true,
       messages: [
         { role: "system", content: request.system },
         { role: "user", content: request.user },
@@ -63,10 +65,7 @@ export class OpenAICompatModel implements ChatModel {
         const detail = (await response.text()).slice(0, 500);
         throw new NamingError("LLM_ERROR", `provider failure: HTTP ${response.status}`, detail);
       }
-      const payload = (await response.json()) as {
-        choices?: { message?: { content?: string } }[];
-      };
-      content = payload.choices?.[0]?.message?.content ?? "";
+      content = await chatContent(response);
     } catch (error) {
       if (error instanceof NamingError) throw error;
       throw new NamingError("LLM_ERROR", `provider failure: ${describe(error)}`, error);

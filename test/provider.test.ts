@@ -35,6 +35,7 @@ it('selects the Anthropic credentials and default model without output caps', as
   expect(named.meta.naming.model).toBe('claude-opus-5');
   expect(requests[0].init?.headers).toMatchObject({ authorization: 'Bearer test-anthropic-key' });
   const body = JSON.parse(String(requests[0].init?.body));
+  expect(body.stream).toBe(true);
   expect(body).not.toHaveProperty('max_tokens');
   expect(body).not.toHaveProperty('max_completion_tokens');
 });
@@ -42,4 +43,12 @@ it('selects the Anthropic credentials and default model without output caps', as
 it('reports provider failure through the public error envelope', async () => {
   vi.stubEnv('LLM_BASE_URL', 'https://unavailable.test');
   await expect(runNamingPass(world, params)).rejects.toMatchObject({ name: 'NamingError', code: 'LLM_ERROR' });
+});
+
+it('rejects a stream cut off before completion', async () => {
+  vi.stubGlobal('fetch', async () => new Response('data: {"choices":[{"delta":{"content":"{}"}}]}\n\n', {
+    headers: { 'content-type': 'text/event-stream' },
+  }));
+  await expect(runNamingPass(world, { ...params, model: 'picked' }))
+    .rejects.toMatchObject({ code: 'LLM_ERROR', message: 'provider stream ended before completion' });
 });

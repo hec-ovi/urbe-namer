@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readJson, writeJsonFile } from "./json.js";
 import { exportBusinesses, runNamingPass, runTypingPass, runWorld, NamingError } from "./index.js";
 import type { PopulationStats } from "./passes/typing.js";
 import type { NamedWorld, RunParams, WorldState } from "./types.js";
@@ -33,27 +33,29 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-function readJson<T>(path: string): T {
-  return JSON.parse(readFileSync(path, "utf8")) as T;
-}
-
 function writeJson(input: string, flag: string | undefined, suffix: string, value: unknown, what: string): void {
   const out = flag ?? input.replace(/\.json$/, "") + suffix;
-  writeFileSync(out, JSON.stringify(value, null, 2) + "\n");
+  writeJsonFile(out, value);
   console.log(`${what} written to ${out}`);
 }
 
 function runParams(flags: Record<string, string>): RunParams {
   if (!flags.theme) fail(USAGE);
+  let ranges: RunParams["ranges"];
+  try {
+    ranges = flags.ranges ? JSON.parse(flags.ranges) : undefined;
+  } catch {
+    throw new NamingError("INVALID_PARAMS", "ranges must be JSON");
+  }
   return {
     theme: flags.theme,
     model: flags.model,
-    ranges: flags.ranges ? (JSON.parse(flags.ranges) as RunParams["ranges"]) : undefined,
+    ranges,
   };
 }
 
 function readStats(flags: Record<string, string>): PopulationStats | undefined {
-  return flags.stats ? readJson<PopulationStats>(flags.stats) : undefined;
+  return flags.stats ? readJson<PopulationStats>(flags.stats, "INVALID_PARAMS") : undefined;
 }
 
 async function main(): Promise<void> {

@@ -14,5 +14,18 @@ export const modelFetch: typeof fetch = async (input, init) => {
     user: body.messages[1].content,
     schema: body.response_format?.json_schema?.schema,
   } as ChatRequest);
-  return Response.json({ choices: [{ message: { content: JSON.stringify(answer) } }] });
+  if (!body.stream || body.model === 'picked') {
+    return Response.json({ choices: [{ message: { content: JSON.stringify(answer) } }] });
+  }
+  const text = JSON.stringify(answer);
+  const event = (content: string) => `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\r\n\r\n`;
+  const bytes = new TextEncoder().encode(`: keepalive\r\n\r\n${event(text.slice(0, 5))}${event(text.slice(5))}data: [DONE]\r\n\r\n`);
+  let offset = 0;
+  return new Response(new ReadableStream({
+    pull(controller) {
+      if (offset === bytes.length) return controller.close();
+      controller.enqueue(bytes.slice(offset, offset + 7));
+      offset = Math.min(offset + 7, bytes.length);
+    },
+  }), { headers: { 'content-type': 'text/event-stream' } });
 };

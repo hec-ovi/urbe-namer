@@ -1,6 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { NamingError } from "../errors.js";
+import { readJson, writeJsonFile } from "../json.js";
 import type { WorldState } from "../types.js";
 
 /** Fixed file names: the engine's assembly carries `npc-types.json` found beside the
@@ -24,16 +23,12 @@ export class WorldFolder {
   }
 
   readBlueprint(): WorldState {
-    const path = this.path("blueprint");
-    if (!existsSync(path)) {
-      throw new NamingError("INVALID_WORLD", `no ${WORLD_FILES.blueprint} in ${this.dir}`);
-    }
-    return JSON.parse(readFileSync(path, "utf8")) as WorldState;
+    return readJson(this.path("blueprint"));
   }
 
   write(file: Exclude<WorldFile, "blueprint">, value: unknown): string {
     const path = this.path(file);
-    writeFileSync(path, JSON.stringify(value, null, 2) + "\n");
+    writeJsonFile(path, value);
     return path;
   }
 }

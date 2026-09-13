@@ -109,6 +109,8 @@ describe("runNamingPass", () => {
   it("rejects an empty theme", async () => {
     await expect(runNamingPass(fixture("blueprint-small.json"), { theme: " " }, new FakeModel()))
       .rejects.toMatchObject({ code: "INVALID_PARAMS" });
+    await expect(runNamingPass(fixture("blueprint-small.json"), PARAMS, new FakeModel(), { chunkSize: 0 }))
+      .rejects.toMatchObject({ code: "INVALID_PARAMS" });
   });
 
   it("rejects a world with nothing nameable", async () => {
@@ -120,7 +122,7 @@ describe("runNamingPass", () => {
   it("throws COVERAGE_ERROR when repairs cannot fix duplicate names", async () => {
     const colliding = new FakeModel((request) => {
       const ids = requiredIds(request.schema);
-      const names = Object.fromEntries(ids.map((id) => [id, "Same Name"]));
+      const names = Object.fromEntries(ids.map((id) => [id, id.startsWith("d") ? `N-${id}` : "Same Name"]));
       const wantsCharter = ((request.schema?.required as string[]) ?? []).includes("charter");
       return wantsCharter ? { charter: "c", names } : { names };
     });

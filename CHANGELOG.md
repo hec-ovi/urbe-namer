@@ -1,3 +1,3 @@
 # Changelog
 
-0.4.9: standalone naming, NPC typing, business export and world-folder APIs with an agent skill and contract tests using injected model responses.
+0.4.10: naming and NPC typing with validated parameters, repairable model output, streamed provider responses, business export and world-folder calls. Agent skill and isolated contract tests cover the public API.

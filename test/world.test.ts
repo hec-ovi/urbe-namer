@@ -1,9 +1,9 @@
-import { copyFileSync, mkdirSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, mkdirSync, existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { Ajv2020 as Ajv } from "ajv/dist/2020.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runWorld, exportBusinesses } from "../src/index.js";
-import { FakeModel } from "./fake-model.js";
+import { FakeModel, wellBehaved } from "./fake-model.js";
 
 mkdirSync(new URL("../.test-work/", import.meta.url), { recursive: true });
 const workdir = new URL("../.test-work/", import.meta.url).pathname;
@@ -34,7 +34,7 @@ describe("runWorld", () => {
 
     expect(ajv.validate(schemaFile("npc-types.schema.json"), readJson(join(dir, "npc-types.json")))).toBe(true);
     expect(ajv.validate(schemaFile("businesses.schema.json"), readJson(join(dir, "businesses.json")))).toBe(true);
-    expect(run.businesses).toEqual(exportBusinesses(run.named));
+    expect(run.businesses[0]).toEqual({ brandName: "N-p0", businessKind: "corpo", tier: "high_rich" });
     expect(run.businesses.map(b => b.brandName)).toEqual([
       "N-p0", "N-p1", "N-p2", "N-p3", "N-p8", "N-p11", "N-p13", "N-p17", "N-p18", "N-p19",
     ]);
@@ -50,11 +50,26 @@ describe("runWorld", () => {
     expect(exportBusinesses(named)).toEqual([]);
   });
 
-  it("rejects a folder without blueprint.json", async () => {
-    const empty = mkdtempSync(join(workdir, "urbe-naming-empty-"));
-    expect(existsSync(join(empty, "blueprint.json"))).toBe(false);
+  it("preserves completed naming when the later typing stage fails", async () => {
+    const partial = mkdtempSync(join(workdir, "partial-"));
+    copyFileSync(new URL("../fixtures/blueprint-small.json", import.meta.url), join(partial, "blueprint.json"));
+    const model = new FakeModel(request => {
+      if ((request.schema?.properties as Record<string, unknown>).types) return { types: [], namePool: {} };
+      return wellBehaved(request);
+    });
+    try {
+      await expect(runWorld(partial, PARAMS, undefined, model)).rejects.toMatchObject({ code: "COVERAGE_ERROR" });
+      expect(readJson(join(partial, "blueprint.named.json")).meta.naming.theme).toBe(PARAMS.theme);
+      expect(existsSync(join(partial, "npc-types.json"))).toBe(false);
+      expect(existsSync(join(partial, "businesses.json"))).toBe(false);
+    } finally { rmSync(partial, { recursive: true, force: true }); }
+  });
 
-    await expect(runWorld(empty, PARAMS, undefined, new FakeModel())).rejects.toMatchObject({ code: "INVALID_WORLD" });
-    rmSync(empty, { recursive: true, force: true });
+  it("rejects unreadable blueprint JSON through the closed error set", async () => {
+    const invalid = mkdtempSync(join(workdir, "invalid-"));
+    try {
+      writeFileSync(join(invalid, "blueprint.json"), "{");
+      await expect(runWorld(invalid, PARAMS, undefined, new FakeModel())).rejects.toMatchObject({ code: "INVALID_WORLD" });
+    } finally { rmSync(invalid, { recursive: true, force: true }); }
   });
 });

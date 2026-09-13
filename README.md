@@ -1,6 +1,6 @@
 # urbe-naming
 
-Version 0.4.9. Names selected city entities from a theme and generates grounded NPC types, personal name pools and business labels. TypeScript library and CLI; geometry and source identities pass through unchanged.
+Version 0.4.10. Names selected city entities from a theme and generates grounded NPC types, personal name pools and business labels. TypeScript library and CLI; geometry and source identities pass through unchanged.
 
 ```sh
 npm ci

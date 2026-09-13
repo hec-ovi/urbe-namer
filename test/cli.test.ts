@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { closeSync, openSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { closeSync, openSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { afterEach, expect, it } from 'vitest';
@@ -16,7 +16,7 @@ function folder() {
   return dir;
 }
 async function cli(args: string[]) {
-  const env = { ...process.env, LLM_BASE_URL: 'https://model.test' };
+  const env = { ...process.env, LLM_BASE_URL: 'https://model.test', NODE_OPTIONS: `--import tsx --import ${new URL('./cli-model.ts', import.meta.url).href}` };
   for (const key of ['LLM_MODEL', 'LLM_PROVIDER', 'LLM_API_KEY', 'ANTHROPIC_API_KEY']) delete env[key as keyof typeof env];
   const logs = folder();
   const stdout = join(logs, 'stdout');
@@ -25,9 +25,7 @@ async function cli(args: string[]) {
   const err = openSync(stderr, 'w');
   try {
     const code = await new Promise<number | null>((resolve, reject) => {
-      const child = spawn(process.execPath, [
-        '--import', 'tsx', '--import', './test/cli-model.ts', 'src/cli.ts', ...args,
-      ], { cwd: root, env, stdio: ['ignore', out, err] });
+      const child = spawn('npm', ['run', '--silent', args[0], '--', ...args.slice(1)], { cwd: root, env, stdio: ['ignore', out, err] });
       child.once('error', reject);
       child.once('exit', resolve);
     });
@@ -49,7 +47,9 @@ it('supports each single-file command and its output flags', async () => {
   const named = join(dir, 'named.json');
   expect((await cli(['name', source, '--theme', 'port city', '--model', 'picked', '--out', named])).code).toBe(0);
   expect(JSON.parse(readFileSync(named, 'utf8')).meta.naming.model).toBe('picked');
-  expect((await cli(['types', named, '--theme', 'port city', '--ranges', '{"worker":{"min":1,"max":2}}'])).code).toBe(0);
+  const stats = join(dir, 'stats.json');
+  writeFileSync(stats, JSON.stringify({ population: 5200, households: 2100, employed: 2600, unemployed: 700, perDistrict: [] }));
+  expect((await cli(['types', named, '--theme', 'port city', '--stats', stats, '--ranges', '{"worker":{"min":1,"max":2}}'])).code).toBe(0);
   expect(JSON.parse(readFileSync(join(dir, 'named-npc-types.json'), 'utf8')).types.length).toBeGreaterThan(0);
   expect((await cli(['businesses', named])).code).toBe(0);
   expect(JSON.parse(readFileSync(join(dir, 'named-businesses.json'), 'utf8')).length).toBeGreaterThan(0);

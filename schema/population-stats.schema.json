@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urbe/naming/population-stats",
+  "title": "Simulation demographics consumed by Naming",
+  "type": "object",
+  "required": ["population", "households", "employed", "unemployed", "perDistrict"],
+  "properties": {
+    "population": { "type": "number" },
+    "households": { "type": "number" },
+    "employed": { "type": "number" },
+    "unemployed": { "type": "number" },
+    "perDistrict": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["districtId", "population", "households", "byTier"],
+        "properties": {
+          "districtId": { "type": "string" },
+          "population": { "type": "number" },
+          "households": { "type": "number" },
+          "byTier": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["population", "employed", "unemployed"],
+              "properties": {
+                "population": { "type": "number" },
+                "employed": { "type": "number" },
+                "unemployed": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

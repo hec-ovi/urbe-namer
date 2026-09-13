@@ -44,11 +44,11 @@ describe("runTypingPass", () => {
     const model = new FakeModel(() => {
       calls += 1;
       if (calls === 1) {
-        return { types: [{ ...GOOD_TYPES[0], grounding: { districts: ["Nowhere"] } }], namePool: POOL };
+        return { types: [null], namePool: {} };
       }
       return { types: GOOD_TYPES, namePool: POOL };
     });
-    const set = await runTypingPass(namedWorld, PARAMS, undefined, model);
+    const set = await runTypingPass(namedWorld, PARAMS, undefined, model, { maxRepairRounds: 1 });
     expect(calls).toBe(2);
     expect(set.types).toHaveLength(4);
   });
@@ -69,9 +69,11 @@ describe("runTypingPass", () => {
       .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
   });
 
-  it("rejects malformed ranges", async () => {
-    const params = { ...PARAMS, ranges: { vendor: { min: 5, max: 2 } } };
+  it("rejects malformed ranges and demographics", async () => {
+    const params = { ...PARAMS, ranges: { vendor: { min: -1, max: 2 } } };
     await expect(runTypingPass(namedWorld, params, undefined, new FakeModel()))
+      .rejects.toMatchObject({ code: "INVALID_PARAMS" });
+    await expect(runTypingPass(namedWorld, PARAMS, { ...STATS, population: null } as unknown as PopulationStats, new FakeModel()))
       .rejects.toMatchObject({ code: "INVALID_PARAMS" });
   });
 

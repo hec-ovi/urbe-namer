@@ -1,5 +1,5 @@
 import type { ChatModel } from "../llm/model.js";
-import type { NamedWorld, NamePool, NpcType, NpcTypeSet, RunParams } from "../types.js";
+import type { NamedWorld, NpcType, NpcTypeSet, RunParams } from "../types.js";
 import { NamingError } from "../errors.js";
 import { PromptLoader } from "../prompts/loader.js";
 import { SchemaValidator } from "../validate/schemas.js";
@@ -7,7 +7,7 @@ import { NamedWorldValidator } from "../validate/named-world.js";
 import { typingOutputSchema } from "./output-schemas.js";
 import { asArray } from "../json.js";
 
-const MIN_POOL = 20;
+import { emptyPool, extractPool, modelSide } from "./name-pool.js";
 
 /** simulation's PopulationStats (../simulation/src/schemas/population.ts), consumed loosely. */
 export interface PopulationStats {
@@ -49,20 +49,15 @@ export class TypingPass {
     private readonly model: ChatModel,
     options: TypingPassOptions = {},
   ) {
+    this.schemas.options(options);
     this.maxRepairRounds = options.maxRepairRounds ?? 2;
   }
 
   async run(world: NamedWorld, params: RunParams, stats?: PopulationStats): Promise<NpcTypeSet> {
-    if (!params.theme || params.theme.trim() === "") {
-      throw new NamingError("INVALID_PARAMS", "theme is required");
-    }
+    this.schemas.params(params);
     const ranges = { ...DEFAULT_RANGES, ...(params.ranges ?? {}) };
-    for (const [category, range] of Object.entries(ranges)) {
-      if (range.min > range.max) {
-        throw new NamingError("INVALID_PARAMS", `range for ${category}: min ${range.min} > max ${range.max}`);
-      }
-    }
     this.namedWorlds.assert(world, "INVALID_WORLD");
+    if (stats !== undefined) this.schemas.assert("population-stats.schema.json", stats, "INVALID_PARAMS", "population stats");
 
     const ground = this.grounding(world);
     const summary = this.summarize(world, ground, stats);
@@ -77,8 +72,9 @@ export class TypingPass {
       fewshots: this.prompts.render("fewshots/typing/types.md"),
     });
 
+    const meta = { theme: params.theme, worldSeed: world.meta.seed, model: this.model.id, createdAt: new Date().toISOString() };
     let types: NpcType[] = [];
-    let namePool: NamePool = emptyPool();
+    let namePool = emptyPool();
     let problems: string[] = [];
     for (let round = 0; round <= this.maxRepairRounds; round++) {
       if (round > 0) {
@@ -97,7 +93,13 @@ export class TypingPass {
       });
       types = extractTypes(raw);
       namePool = extractPool(raw);
-      problems = [...this.validate(types, ranges, ground), ...validatePool(namePool)];
+      try {
+        this.schemas.assert("npc-types.schema.json", { meta, types, namePool }, "COVERAGE_ERROR", "NPC type set");
+        problems = this.validate(types, ranges, ground);
+      } catch (error) {
+        if (!(error instanceof NamingError)) throw error;
+        problems = [error.message];
+      }
       if (problems.length === 0) break;
     }
     if (problems.length > 0) {
@@ -109,18 +111,7 @@ export class TypingPass {
       );
     }
 
-    const set: NpcTypeSet = {
-      meta: {
-        theme: params.theme,
-        worldSeed: world.meta.seed,
-        model: this.model.id,
-        createdAt: new Date().toISOString(),
-      },
-      types,
-      namePool,
-    };
-    this.schemas.assert("npc-types.schema.json", set, "COVERAGE_ERROR", "NPC type set");
-    return set;
+    return { meta, types, namePool };
   }
 
   /** What the world actually contains: the closed reference space for grounding. */
@@ -182,20 +173,13 @@ export class TypingPass {
     ground: ReturnType<TypingPass["grounding"]>,
   ): string[] {
     const problems: string[] = [];
-    if (types.length === 0) {
-      problems.push("output: no types found; return {\"types\": [...]}");
-      return problems;
-    }
     const seen = new Set<string>();
     const perCategory: Record<string, number> = {};
     for (const t of types) {
-      if (!/^[a-z][a-z0-9_]*$/.test(t.type ?? "")) problems.push(`type ${t.type}: not a snake_case machine string`);
       if (seen.has(t.type)) problems.push(`type ${t.type}: duplicated`);
       seen.add(t.type);
-      if (!(t.category in ranges)) problems.push(`type ${t.type}: unknown category ${t.category}`);
-      else perCategory[t.category] = (perCategory[t.category] ?? 0) + 1;
+      perCategory[t.category] = (perCategory[t.category] ?? 0) + 1;
       if (!t.boilerplate || t.boilerplate.trim() === "") problems.push(`type ${t.type}: empty boilerplate`);
-      if (!(typeof t.weight === "number" && t.weight > 0)) problems.push(`type ${t.type}: weight must be a positive number`);
       for (const d of t.grounding?.districts ?? []) {
         if (!ground.districtNames.has(d)) problems.push(`type ${t.type}: grounding district "${d}" not in the world`);
       }
@@ -219,58 +203,4 @@ function extractTypes(raw: unknown): NpcType[] {
   const container = (raw ?? {}) as Record<string, unknown>;
   const list = Array.isArray(container.types) ? container.types : Array.isArray(raw) ? raw : [];
   return list as NpcType[];
-}
-
-function emptyPool(): NamePool {
-  return { given: [], givenByGender: { male: [], female: [], neutral: [] }, family: [] };
-}
-
-/** What the model owns: the flat `given` list is derived here, so it never comes back edited. */
-function modelSide(pool: NamePool): Pick<NamePool, "givenByGender" | "family"> {
-  return { givenByGender: pool.givenByGender, family: pool.family };
-}
-
-/** Trims, drops empties and dedupes case-insensitively; deterministic harness-side cleanup.
- *  Given names dedupe across the three gender lists, so a name lands in exactly one, and the
- *  flat `given` list is their union: the tags and the flat list can never drift apart. */
-function extractPool(raw: unknown): NamePool {
-  const container = ((raw ?? {}) as Record<string, unknown>).namePool as Record<string, unknown> | undefined;
-  const tagged = (container?.givenByGender ?? {}) as Record<string, unknown>;
-  const givenSeen = new Set<string>();
-  const givenByGender = {
-    male: clean(tagged.male, givenSeen),
-    female: clean(tagged.female, givenSeen),
-    neutral: clean(tagged.neutral, givenSeen),
-  };
-  return {
-    given: [...givenByGender.male, ...givenByGender.female, ...givenByGender.neutral],
-    givenByGender,
-    family: clean(container?.family, new Set()),
-  };
-}
-
-function clean(value: unknown, seen: Set<string>): string[] {
-  const out: string[] = [];
-  for (const item of Array.isArray(value) ? value : []) {
-    if (typeof item !== "string") continue;
-    const name = item.trim();
-    const key = name.toLowerCase();
-    if (name === "" || seen.has(key)) continue;
-    seen.add(key);
-    out.push(name);
-  }
-  return out;
-}
-
-function validatePool(pool: NamePool): string[] {
-  const problems: string[] = [];
-  if (pool.given.length < MIN_POOL) {
-    problems.push(
-      `pool: ${pool.given.length} distinct given names across male, female and neutral, need at least ${MIN_POOL} in total`,
-    );
-  }
-  if (pool.family.length < MIN_POOL) {
-    problems.push(`pool: ${pool.family.length} distinct family names, need at least ${MIN_POOL}`);
-  }
-  return problems;
 }
