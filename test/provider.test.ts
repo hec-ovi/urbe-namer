@@ -1,104 +1,45 @@
-import { readFileSync } from "node:fs";
-import { createServer, type Server } from "node:http";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { runNamingPass } from "../src/index.js";
-import type { WorldState } from "../src/types.js";
-import { wellBehaved } from "./fake-model.js";
+import { readFileSync } from 'node:fs';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { runNamingPass } from '../src/index.js';
+import { modelFetch, requests } from './provider-stub.js';
 
-const PARAMS = { theme: "a rain-soaked dystopian megacity" };
+const world = JSON.parse(readFileSync(new URL('../fixtures/blueprint-small.json', import.meta.url), 'utf8'));
+const params = { theme: 'rain-soaked port city' };
+beforeEach(() => {
+  requests.length = 0;
+  vi.stubGlobal('fetch', modelFetch);
+  for (const key of ['LLM_MODEL', 'LLM_PROVIDER', 'LLM_API_KEY', 'ANTHROPIC_API_KEY']) vi.stubEnv(key, undefined);
+  vi.stubEnv('LLM_BASE_URL', 'https://model.test');
+});
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
-interface ChatBody {
-  model: string;
-  authorization?: string;
-  max_tokens?: number;
-  max_completion_tokens?: number;
-  response_format?: { type: string; json_schema?: { schema: Record<string, unknown> } };
-}
-
-/** Stub OpenAI-compatible server: lists one model, answers every chat completion from the
- *  request's json_schema the way the fake model does. */
-const seen: ChatBody[] = [];
-let server: Server;
-let baseUrl: string;
-const savedEnv = { ...process.env };
-
-beforeAll(async () => {
-  server = createServer((req, res) => {
-    let body = "";
-    req.on("data", (chunk) => (body += chunk));
-    req.on("end", () => {
-      res.setHeader("content-type", "application/json");
-      if (req.url === "/v1/models") {
-        res.end(JSON.stringify({ data: [{ id: "stub-model" }] }));
-        return;
-      }
-      const request = {
-        ...(JSON.parse(body) as ChatBody),
-        authorization: req.headers.authorization,
-      };
-      seen.push(request);
-      const answer = wellBehaved({ system: "", user: "", schema: request.response_format?.json_schema?.schema });
-      res.end(JSON.stringify({ choices: [{ message: { content: JSON.stringify(answer) } }] }));
-    });
-  });
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-  baseUrl = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+it('discovers the served model and honors the environment key', async () => {
+  vi.stubEnv('LLM_API_KEY', 'test-key');
+  const named = await runNamingPass(world, params);
+  expect(named.meta.naming.model).toBe('stub-model');
+  expect(requests[0].url).toBe('https://model.test/v1/models');
+  expect(requests[0].init?.headers).toMatchObject({ authorization: 'Bearer test-key' });
 });
 
-afterAll(async () => {
-  process.env = savedEnv;
-  await new Promise<void>((resolve) => server.close(() => resolve()));
+it('uses an explicit model ahead of the environment model', async () => {
+  vi.stubEnv('LLM_MODEL', 'environment-model');
+  const named = await runNamingPass(world, { ...params, model: 'picked' });
+  expect(named.meta.naming.model).toBe('picked');
+  expect(requests.every(r => r.url.endsWith('/chat/completions'))).toBe(true);
 });
 
-function world(): WorldState {
-  return JSON.parse(readFileSync(new URL("../fixtures/blueprint-small.json", import.meta.url), "utf8"));
-}
+it('selects the Anthropic credentials and default model without output caps', async () => {
+  vi.stubEnv('LLM_PROVIDER', 'anthropic');
+  vi.stubEnv('ANTHROPIC_API_KEY', 'test-anthropic-key');
+  const named = await runNamingPass(world, params);
+  expect(named.meta.naming.model).toBe('claude-opus-5');
+  expect(requests[0].init?.headers).toMatchObject({ authorization: 'Bearer test-anthropic-key' });
+  const body = JSON.parse(String(requests[0].init?.body));
+  expect(body).not.toHaveProperty('max_tokens');
+  expect(body).not.toHaveProperty('max_completion_tokens');
+});
 
-describe("provider from the environment", () => {
-  it("talks to the server at LLM_BASE_URL and takes its first listed model when LLM_MODEL is unset", async () => {
-    process.env = { ...savedEnv, LLM_BASE_URL: baseUrl };
-    delete process.env.LLM_MODEL;
-    delete process.env.LLM_PROVIDER;
-    seen.length = 0;
-
-    const named = await runNamingPass(world(), PARAMS);
-
-    expect(named.meta.naming?.model).toBe("stub-model");
-    expect(seen[0]).toMatchObject({ model: "stub-model", response_format: { type: "json_schema" } });
-  });
-
-  it("lets the model param override the served model", async () => {
-    process.env = { ...savedEnv, LLM_BASE_URL: baseUrl };
-    seen.length = 0;
-
-    const named = await runNamingPass(world(), { ...PARAMS, model: "picked" });
-
-    expect(named.meta.naming?.model).toBe("picked");
-    expect(seen.every((request) => request.model === "picked")).toBe(true);
-  });
-
-  it("uses Claude through the compatible endpoint without an output-token limit", async () => {
-    process.env = {
-      ...savedEnv,
-      LLM_PROVIDER: "anthropic",
-      LLM_BASE_URL: baseUrl,
-      ANTHROPIC_API_KEY: "test-key",
-    };
-    delete process.env.LLM_MODEL;
-    seen.length = 0;
-
-    const named = await runNamingPass(world(), PARAMS);
-
-    expect(named.meta.naming?.model).toBe("claude-opus-5");
-    expect(seen[0]).toMatchObject({ model: "claude-opus-5", authorization: "Bearer test-key" });
-    expect(seen[0]).not.toHaveProperty("max_tokens");
-    expect(seen[0]).not.toHaveProperty("max_completion_tokens");
-  });
-
-  it("surfaces an unreachable server as LLM_ERROR", async () => {
-    process.env = { ...savedEnv, LLM_BASE_URL: "http://127.0.0.1:9" };
-    delete process.env.LLM_MODEL;
-
-    await expect(runNamingPass(world(), PARAMS)).rejects.toMatchObject({ code: "LLM_ERROR" });
-  });
+it('reports provider failure through the public error envelope', async () => {
+  vi.stubEnv('LLM_BASE_URL', 'https://unavailable.test');
+  await expect(runNamingPass(world, params)).rejects.toMatchObject({ name: 'NamingError', code: 'LLM_ERROR' });
 });

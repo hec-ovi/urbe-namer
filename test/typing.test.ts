@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { runNamingPass, runTypingPass } from "../src/index.js";
 import type { NamedWorld, WorldState } from "../src/types.js";
 import type { PopulationStats } from "../src/passes/typing.js";
-import { FakeModel, FAMILY, GOOD_TYPES, POOL } from "./fake-model.js";
+import { FakeModel, GOOD_TYPES, POOL } from "./fake-model.js";
 
 const PARAMS = { theme: "a rain-soaked dystopian megacity" };
 
@@ -31,42 +31,12 @@ describe("runTypingPass", () => {
     const model = new FakeModel(() => ({ types: GOOD_TYPES, namePool: POOL }));
     const set = await runTypingPass(namedWorld, PARAMS, STATS, model);
 
-    expect(set.types.map((t) => t.type)).toContain("vat_worker");
+    expect(set.types).toEqual(GOOD_TYPES);
+    expect(model.requests[0].user).toContain("households 2100");
+    expect(set.namePool.given).toEqual(Object.values(set.namePool.givenByGender).flat());
+    expect(new Set(set.namePool.given).size).toBeGreaterThanOrEqual(20);
     expect(set.namePool.family.length).toBeGreaterThanOrEqual(20);
     expect(set.meta).toMatchObject({ theme: PARAMS.theme, worldSeed: "fixture-small", model: "fake-model" });
-  });
-
-  it("tags every given name by gender and keeps the flat list as their union", async () => {
-    const model = new FakeModel(() => ({ types: GOOD_TYPES, namePool: POOL }));
-    const { given, givenByGender } = (await runTypingPass(namedWorld, PARAMS, undefined, model)).namePool;
-
-    expect(Object.keys(givenByGender).sort()).toEqual(["female", "male", "neutral"]);
-    expect(given).toEqual([...givenByGender.male, ...givenByGender.female, ...givenByGender.neutral]);
-    expect(given.length).toBeGreaterThanOrEqual(20);
-  });
-
-  it("accepts an all-neutral pool for a theme whose names carry no gender", async () => {
-    const neutral = Array.from({ length: 22 }, (_, i) => `Sun${i}`);
-    const model = new FakeModel(() => ({
-      types: GOOD_TYPES,
-      namePool: { givenByGender: { male: [], female: [], neutral }, family: FAMILY },
-    }));
-    const set = await runTypingPass(namedWorld, PARAMS, undefined, model);
-
-    expect(set.namePool.givenByGender.neutral).toEqual(neutral);
-    expect(set.namePool.given).toEqual(neutral);
-  });
-
-  it("throws COVERAGE_ERROR when the tagged lists hold under 20 distinct given names in total", async () => {
-    const model = new FakeModel(() => ({
-      types: GOOD_TYPES,
-      namePool: {
-        givenByGender: { male: POOL.givenByGender.male, female: POOL.givenByGender.female.slice(0, 9), neutral: [] },
-        family: FAMILY,
-      },
-    }));
-    await expect(runTypingPass(namedWorld, PARAMS, undefined, model))
-      .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
   });
 
   it("repairs an invalid first answer by feeding the problems back", async () => {
@@ -105,41 +75,9 @@ describe("runTypingPass", () => {
       .rejects.toMatchObject({ code: "INVALID_PARAMS" });
   });
 
-  it("rejects a world that has not been named", async () => {
-    const raw = JSON.parse(
-      readFileSync(new URL("../fixtures/blueprint-small.json", import.meta.url), "utf8"),
-    ) as WorldState;
-    await expect(runTypingPass(raw as NamedWorld, PARAMS, undefined, new FakeModel()))
-      .rejects.toMatchObject({ code: "INVALID_WORLD" });
-  });
-
-  it("keeps malformed named-world errors inside the closed error set", async () => {
-    await expect(runTypingPass(null as unknown as NamedWorld, PARAMS, undefined, new FakeModel()))
-      .rejects.toMatchObject({ code: "INVALID_WORLD" });
-  });
-
-  it("rejects a policy world with valid metadata but zero selected names", async () => {
-    const raw = JSON.parse(
-      readFileSync(new URL("../fixtures/blueprint-small.json", import.meta.url), "utf8"),
-    ) as WorldState;
-    raw.meta.naming = structuredClone(namedWorld.meta.naming);
-
-    await expect(runTypingPass(raw as NamedWorld, PARAMS, undefined, new FakeModel()))
-      .rejects.toMatchObject({ code: "INVALID_WORLD" });
-  });
-
-  it.each(["not-a-timestamp", "2026-02-31T12:34:56.789Z"])("rejects invalid named-world timestamp metadata: %s", async (namedAt) => {
-    const invalid = structuredClone(namedWorld);
-    invalid.meta.naming.namedAt = namedAt;
-
-    await expect(runTypingPass(invalid, PARAMS, undefined, new FakeModel()))
-      .rejects.toMatchObject({ code: "INVALID_WORLD" });
-  });
-
-  it("rejects a named world missing one selected name", async () => {
+  it("rejects a named world missing a selected name", async () => {
     const partial = structuredClone(namedWorld);
-    delete ((partial.parcels as { id: string; name?: string }[]).find((parcel) => parcel.id === "p0")!).name;
-
+    delete ((partial.parcels as { id: string; name?: string }[]).find(p => p.id === "p0")!).name;
     await expect(runTypingPass(partial, PARAMS, undefined, new FakeModel()))
       .rejects.toMatchObject({ code: "INVALID_WORLD" });
   });

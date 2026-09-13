@@ -1,17 +1,14 @@
-# Box map
+# Naming box
 
-- root box: the naming and typing passes. Contract in CONTRACT.md; entry points `runNamingPass` / `runTypingPass` / `exportBusinesses` / `runWorld` (src/index.ts) plus the CLI (src/cli.ts). Depends on Atlas, optional Simulation demographics and the Materials rebrand shape.
-  - src/world: worksheet extraction (generic placeholder walk + atlas blueprint policy), name patch-back, the world folder (fixed file names) and the pipeline that chains the passes over it.
-  - src/passes: naming (charter + chunked groups + repair), typing (types + name pool), constrained output schemas.
-  - src/llm: ChatModel surface and OpenAI-compatible implementation for local servers or Claude.
-  - src/validate: JSON-schema and coverage validation, the sign alphabet.
-  - src/export: the businesses list for the materials rebrand lane.
-  - prompts/: every prompt and few-shot set, one .md each.
-  - schema/: published JSON schemas (world-state input, named-world output, params, NPC types, businesses).
-  - fixtures/: the atlas tiny sample verbatim (blueprint 0.14.0), two naming-shaped worlds (small carries the station shape, large the scale), one explicit-placeholder world.
+| Box | Purpose | Input | Output | Dependencies |
+| --- | --- | --- | --- | --- |
+| [Naming](../CONTRACT.md) | Name entities and create NPC types/pools | [World](../schema/world-state.schema.json), [params](../schema/params.schema.json), optional [demographics](../../simulation/src/schemas/population.ts) | [Named world](../schema/named-world.schema.json), [types](../schema/npc-types.schema.json), [businesses](../schema/businesses.schema.json) | Atlas data, optional Simulation data, Materials sign format, injected model |
 
-No inner boxes; the folder is small enough for one agent.
+- [Agent skill](../SKILL.md): calls, defaults and example.
+- [README](../README.md): setup and local verification.
+- [Issues](ISSUES.md): Quests integration and shared decisions.
+- [Changelog](../CHANGELOG.md): current package behavior.
 
-Tests cover the contract surface through its real entry points: the library passes, and the CLI in its own process against a stub OpenAI-compatible server.
+One box. `src/index.ts` and `src/cli.ts` expose it; `passes/` coordinates creative work, `world/` selects and patches entities and handles folders, `validate/` enforces schemas and coverage, `llm/` handles transport, `export/` projects businesses. Prompts live in `prompts/`, public JSON schemas in `schema/`.
 
-Research conclusions: docs/RESEARCH.md.
+Tests call the library and CLI entry points with injected model responses. Test artifacts stay in `.test-work/`; no sibling runtime or model server is required.

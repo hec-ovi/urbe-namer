@@ -1,6 +1,4 @@
-/** Constrained-output JSON schemas built per call. ID-keyed objects with every id in
- *  `required` and `additionalProperties: false`: dropping or inventing an entity is a
- *  grammar violation, not a post-hoc detection (see docs/RESEARCH.md). */
+/** Model response schemas; the passes validate received data independently. */
 
 const CATEGORIES = ["resident", "worker", "vendor", "authority", "transit", "street"];
 

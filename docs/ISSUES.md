@@ -1,0 +1,17 @@
+# Coordination proposals
+
+These are proposals for the orchestrator. The standalone Naming API and output shapes remain the current boundary.
+
+| Proposal | What and why | Affected boxes |
+| --- | --- | --- |
+| Naming within Quests | Move naming/typing passes, prompts, validation, schemas, model port and business export into a naming responsibility inside Quests. Quests gains an optional naming stage or imported final artifacts and returns them with its creation result. Retain Naming calls and folder filenames through a compatibility entry until callers migrate. Repo moves and the canonical entry path need coordination. | Naming, Quests, Simulation, Engine, Materials |
+| Narrative naming input | Publish semantic story/script context, stable target IDs, relationships, existing names and locked story-person names. Return an ID-keyed final-name map, story references, prior display values and validation results. This connects names to narrative meaning and permits controlled side-story extensions without changing saved identities. Exact schemas and staging remain open. | Naming, Quests, Simulation, Engine |
+| Naming order | Resolve the stage document's story/script-first workflow against the naming-first requirement. Preview versus authoritative names and replacement policy remain undecided. | Naming, Quests, Engine |
+| City, streets and organizations | Define identities and consumers for city names, named streets, organizations and narrative locations beyond district/parcel/transit selection. Publish final-name bindings before adding these outputs. | Atlas, Naming, Quests, Engine |
+| Type and role mapping | Define how themed types map to Interior floor/post roles and Simulation reservations, including story background constraints. Naming supplies reusable types/pools; Simulation allocates people and preserves names. | Naming, Quests, Interior, Simulation |
+| Display rules | Agree how narrative names outside the sign alphabet and 32-character bound retain meaning across signs, map, codex and dialogue. Current normalization folds accents; no downstream renaming/truncation policy is selected here. Publish the shared sign rule before replacing local validation. | Naming, Materials, Streets, Exterior, Interior, Quests, Engine |
+| Output version | Agree where the Naming producer version belongs. Named worlds preserve Atlas metadata; NPC metadata and the bare businesses array carry no Naming version. A shared manifest or consumer migration is required before making a version mandatory. | Naming, Quests, Simulation, Engine, Materials |
+| Progress and partial artifacts | Define observable creative-stage progress and repairable failure artifacts. `runWorld` writes each successful stage immediately; an incomplete run may leave earlier outputs beside older downstream files. A completion manifest, imported-artifact workflow and story provenance belong to the coordinated Quests API. | Naming, Quests, Engine |
+| Public options | Keep `chunkSize` and `maxRepairRounds` callable during this phase. Removal changes library inputs and needs a caller audit. Define whether unknown range categories are invalid parameters; the params schema allows keys beyond the six output categories. | Naming, Quests, direct callers |
+
+Script enrichment, canonical authoring, floor/room placement, distraction/theft, host mechanics, relationships/contact, side-story completion and night/schedule behavior remain the open Quests decisions. This box does not implement those responsibilities.

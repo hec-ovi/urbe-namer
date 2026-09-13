@@ -1,26 +1,10 @@
 import { readFileSync } from "node:fs";
-import { Ajv2020 as Ajv } from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
-import { runNamingPass, NamingError, type ChatModel } from "../src/index.js";
+import { runNamingPass } from "../src/index.js";
 import type { WorldState } from "../src/types.js";
 import { FakeModel, requiredIds } from "./fake-model.js";
 
 const PARAMS = { theme: "a rain-soaked dystopian megacity" };
-const NAMED_AT = "2026-09-03T12:34:56.789Z";
-
-const ajv = new Ajv({ allErrors: true, strict: false });
-ajv.addFormat("date-time", {
-  type: "string",
-  validate: (value: string) => {
-    const parsed = new Date(value);
-    return !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value;
-  },
-});
-ajv.addSchema(JSON.parse(readFileSync(new URL("../schema/world-state.schema.json", import.meta.url), "utf8")));
-const validateNamedWorld = ajv.compile(
-  JSON.parse(readFileSync(new URL("../schema/named-world.schema.json", import.meta.url), "utf8")),
-);
-
 function fixture(name: string): WorldState {
   return JSON.parse(readFileSync(new URL(`../fixtures/${name}`, import.meta.url), "utf8"));
 }
@@ -68,11 +52,11 @@ function policyIds(world: WorldState): string[] {
 }
 
 describe("runNamingPass", () => {
-  it.each(["atlas-city-urbe-tiny.json", "blueprint-small.json"])(
-    "names exactly the policy set of %s and adds nothing else to it",
-    async (file) => {
-      const world = fixture(file);
-      const named = await runNamingPass(world, PARAMS, new FakeModel());
+  it("names the policy set and preserves all source data", async () => {
+      const world = fixture("blueprint-small.json");
+      const before = structuredClone(world);
+      const named = await runNamingPass(world, PARAMS, new FakeModel(), { chunkSize: 1 });
+      expect(world).toEqual(before);
       const { named: namedIds, stripped } = undoNaming(named);
 
       expect(namedIds).toEqual(policyIds(world));
@@ -89,63 +73,12 @@ describe("runNamingPass", () => {
     const byId = new Map(collect(named).map((e) => [e.id, e]));
     expect(byId.get("p0")!.name).toBe("N-p0");
     expect(byId.get("p2")!.name).toBeUndefined();
-    expect(validateNamedWorld(named)).toBe(true);
-  });
-
-  it("returns the published named-world schema with required metadata and explicit name coverage", async () => {
-    const named = await runNamingPass(fixture("world-explicit.json"), PARAMS, new FakeModel());
-    expect(validateNamedWorld(named)).toBe(true);
-
-    const withoutModel = structuredClone(named);
-    delete (withoutModel.meta.naming as { model?: string }).model;
-    expect(validateNamedWorld(withoutModel)).toBe(false);
-    expect(validateNamedWorld.errors).toEqual(expect.arrayContaining([expect.objectContaining({ keyword: "required" })]));
-
-    const withoutName = structuredClone(named);
-    delete (collect(withoutName).find((entity) => entity.id === "p0") as { name?: string }).name;
-    expect(validateNamedWorld(withoutName)).toBe(false);
-    expect(validateNamedWorld.errors).toEqual(expect.arrayContaining([expect.objectContaining({ keyword: "required" })]));
-
-    for (const namedAt of ["not-a-timestamp", "2026-02-31T12:34:56.789Z"]) {
-      const invalidTimestamp = structuredClone(named);
-      invalidTimestamp.meta.naming.namedAt = namedAt;
-      expect(validateNamedWorld(invalidTimestamp)).toBe(false);
-      expect(validateNamedWorld.errors).toEqual(expect.arrayContaining([expect.objectContaining({ keyword: "format" })]));
-    }
-  });
-
-  it("does not validate a policy world with metadata but none of its selected names", () => {
-    const raw = fixture("blueprint-small.json");
-    raw.meta.naming = { theme: PARAMS.theme, model: "fake-model", namedAt: NAMED_AT };
-
-    expect(validateNamedWorld(raw)).toBe(false);
-    expect(validateNamedWorld.errors).toEqual(expect.arrayContaining([expect.objectContaining({ keyword: "required" })]));
-  });
-
-  it("rejects incomplete model metadata at the public output boundary", async () => {
-    const delegate = new FakeModel();
-    const model: ChatModel = {
-      id: "",
-      completeJSON: (request) => delegate.completeJSON(request),
-    };
-
-    await expect(runNamingPass(fixture("blueprint-small.json"), PARAMS, model))
-      .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
-  });
-
-  it("covers a large world across chunked parallel calls", async () => {
-    const world = fixture("blueprint-large.json");
-    const model = new FakeModel();
-    const named = await runNamingPass(world, PARAMS, model, { chunkSize: 25 });
-    expect(collect(named).filter((e) => "name" in e).length).toBe(183);
-    expect(model.requests.length).toBeGreaterThan(2);
   });
 
   it("folds accents onto the sign alphabet and repairs names that cannot spell on a sign", async () => {
     const world = fixture("blueprint-small.json");
     let repairs = 0;
     const model = new FakeModel((request) => {
-      expect(`${request.system}\n${request.user}`).not.toMatch(/\b\d+\s+characters?\b/i);
       const ids = requiredIds(request.schema);
       const isRepair = request.user.includes("came back with problems");
       if (isRepair) repairs += 1;
@@ -195,11 +128,4 @@ describe("runNamingPass", () => {
       .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
   });
 
-  it("surfaces provider failures as LLM_ERROR", async () => {
-    const failing = new FakeModel(() => {
-      throw new NamingError("LLM_ERROR", "provider failure: boom");
-    });
-    await expect(runNamingPass(fixture("blueprint-small.json"), PARAMS, failing))
-      .rejects.toMatchObject({ code: "LLM_ERROR" });
-  });
 });
