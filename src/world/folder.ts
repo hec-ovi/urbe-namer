@@ -26,9 +26,12 @@ export class WorldFolder {
     return readJson(this.path("blueprint"));
   }
 
+  /** The named world is written compact, the way Atlas writes the blueprint it carries:
+   *  it is a whole city of geometry, and no one reads it by eye. The NPC types and the
+   *  businesses list are naming output a person does read, so they stay indented. */
   write(file: Exclude<WorldFile, "blueprint">, value: unknown): string {
     const path = this.path(file);
-    writeJsonFile(path, value);
+    writeJsonFile(path, value, file === "named" ? "compact" : "readable");
     return path;
   }
 }
