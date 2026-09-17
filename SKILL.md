@@ -5,7 +5,7 @@ description: Name generated city entities and create grounded NPC types, reusabl
 
 # Naming API
 
-Version 0.4.10. Names selected city entities from a theme and creates grounded NPC types, personal name pools and business labels.
+Version 0.5.0. Names selected city entities from a theme and creates grounded NPC types, personal name pools and business labels.
 
 Run from this repository with Node.js 20 or later and installed dependencies. Use the library or CLI; this box has no HTTP server entry.
 

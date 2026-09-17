@@ -1,6 +1,6 @@
 # Naming contract
 
-Version 0.4.10. Names selected world entities from a theme and produces grounded NPC types, personal name pools and business labels.
+Version 0.5.0. Names selected world entities from a theme and produces grounded NPC types, personal name pools and business labels.
 
 ## Calls
 
@@ -20,6 +20,7 @@ Passes and folder calls return promises; business export is synchronous. An inje
 - The input must match the world projection even with explicit placeholders. Objects carrying string `id` and `placeholder` select the explicit naming set; otherwise selection covers districts, non-residential parcels, train/subway stations and lines, and bus routes. Bus stops are outside the default policy. Selected IDs must be unique and the set nonempty.
 - Naming copies the input, changes selected `name` values and sets `meta.naming = {theme, model, namedAt}` with canonical UTC timestamp. Other data, including Atlas version and geometry, pass through. LLM names and timestamps are not deterministic; reuse saved artifacts for stable names.
 - Names are case-insensitively unique per namespace: all parcels share one, districts and each transit kind use their own. Names use ASCII letters, digits, spaces and `- . , ' ! ? : / & +`, up to 32 characters. Accent folding and whitespace normalization precede validation; invalid names require repair. District/charter failure rejects immediately; other names receive the configured repair rounds.
+- Every call that accepts or returns a named world checks it twice: [named world](schema/named-world.schema.json) for structure and the naming metadata block, then coverage in code against the worksheet, which is where the selected set, namespace uniqueness and sign spelling are decided. The schema file alone states structure and metadata; a document that passes it can still be rejected for coverage.
 - Types have a unique machine ID, label, category, boilerplate, optional examples, positive relative weight and grounding in existing district names, parcel uses and tiers. Category counts follow ranges. Given and family pools have at least 20 distinct names each. `given` is the union of `givenByGender.male`, `female`, `neutral`, in that order, deduplicated case-insensitively. Pools allocate no people.
 - Businesses are `{brandName, businessKind, tier}` records in parcel order for named hotel, commerce, mall, restaurant, coffee_shop, corpo and clinic parcels. Empty output is valid. This is the `businesses` field of Materials' rebrand request; the caller supplies its material theme key.
 - `runWorld` reads `blueprint.json` and writes `blueprint.named.json`, `npc-types.json`, then `businesses.json`. Reruns replace outputs from the original blueprint. Successful earlier writes remain after a later failure; the folder is not an atomic bundle.
