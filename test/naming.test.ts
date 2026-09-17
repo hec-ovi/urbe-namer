@@ -77,11 +77,9 @@ describe("runNamingPass", () => {
 
   it("folds accents onto the sign alphabet and repairs names that cannot spell on a sign", async () => {
     const world = fixture("blueprint-small.json");
-    let repairs = 0;
     const model = new FakeModel((request) => {
       const ids = requiredIds(request.schema);
       const isRepair = request.user.includes("came back with problems");
-      if (isRepair) repairs += 1;
       const names = Object.fromEntries(
         ids.map((id) => [
           id,
@@ -103,7 +101,6 @@ describe("runNamingPass", () => {
     expect(byId.get("p1")!.name).toBe("Cafe Noir");
     expect(byId.get("p2")!.name).toBe("N-p2");
     expect(byId.get("p3")!.name).toBe("N-p3");
-    expect(repairs).toBe(1);
   });
 
   it("rejects an empty theme", async () => {

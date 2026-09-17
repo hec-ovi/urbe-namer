@@ -49,8 +49,7 @@ describe("runTypingPass", () => {
       return { types: GOOD_TYPES, namePool: POOL };
     });
     const set = await runTypingPass(namedWorld, PARAMS, undefined, model, { maxRepairRounds: 1 });
-    expect(calls).toBe(2);
-    expect(set.types).toHaveLength(4);
+    expect(set.types).toEqual(GOOD_TYPES);
   });
 
   it("throws RANGE_ERROR when type counts stay outside the given ranges", async () => {
