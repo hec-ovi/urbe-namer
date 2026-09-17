@@ -9,6 +9,6 @@
 - [Issues](ISSUES.md): Quests integration and shared decisions.
 - [Changelog](../CHANGELOG.md): current package behavior.
 
-One box. `src/index.ts` and `src/cli.ts` expose it; `passes/` coordinates creative work and normalizes name pools, `world/` selects and patches entities and handles folders, `validate/` enforces schemas and coverage, `llm/` handles transport, `export/` projects businesses. Prompts live in `prompts/`, public JSON schemas in `schema/`.
+One box. `src/index.ts` and `src/cli.ts` expose it; `passes/` coordinates creative work and normalizes name pools, `world/` selects and patches entities and handles folders, `validate/` enforces schemas and coverage, `llm/` handles transport and its retries, `export/` projects businesses; `json.ts` and `pool.ts` at the root read and write files and bound the requests in flight. Prompts live in `prompts/`, public JSON schemas in `schema/`.
 
 Tests call the library and CLI entry points with injected model responses. Test artifacts stay in `.test-work/`; no sibling runtime or model server is required.
