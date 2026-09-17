@@ -1,4 +1,4 @@
-import { readJson, writeJsonFile } from "./json.js";
+import { readJson, writeJsonFile, type JsonLayout } from "./json.js";
 import { exportBusinesses, runNamingPass, runTypingPass, runWorld, NamingError } from "./index.js";
 import type { PopulationStats } from "./passes/typing.js";
 import type { NamedWorld, RunParams, WorldState } from "./types.js";
@@ -33,9 +33,16 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-function writeJson(input: string, flag: string | undefined, suffix: string, value: unknown, what: string): void {
+function writeJson(
+  input: string,
+  flag: string | undefined,
+  suffix: string,
+  value: unknown,
+  what: string,
+  layout: JsonLayout = "readable",
+): void {
   const out = flag ?? input.replace(/\.json$/, "") + suffix;
-  writeJsonFile(out, value);
+  writeJsonFile(out, value, layout);
   console.log(`${what} written to ${out}`);
 }
 
@@ -68,7 +75,7 @@ async function main(): Promise<void> {
     );
   } else if (command === "name") {
     const named = await runNamingPass(readJson<WorldState>(input), runParams(flags));
-    writeJson(input, flags.out, "-named.json", named, "named world");
+    writeJson(input, flags.out, "-named.json", named, "named world", "compact");
   } else if (command === "types") {
     const set = await runTypingPass(readJson<NamedWorld>(input), runParams(flags), readStats(flags));
     writeJson(input, flags.out, "-npc-types.json", set, "NPC type set");

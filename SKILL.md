@@ -41,6 +41,6 @@ cp fixtures/blueprint-small.json worlds/example/blueprint.json
 npm run world -- worlds/example --theme "rain-soaked port city, 2140, corporate enclaves"
 ```
 
-This reads `blueprint.json` and writes `blueprint.named.json`, `npc-types.json`, `businesses.json` beside it. A rerun replaces outputs; a failure can leave partial artifacts. Single-file commands are `npm run name|types|businesses -- <input.json>` with `--out <file>` optional; default suffixes are `-named.json`, `-npc-types.json`, `-businesses.json`. Naming/typing require `--theme`; typing/world accept `--ranges '<json>'` and `--stats <file>`. Both creative passes accept `--model <id>`.
+This reads `blueprint.json` and writes `blueprint.named.json`, `npc-types.json`, `businesses.json` beside it. A named world is written compact, the two small files indented. A rerun replaces outputs; a failure can leave partial artifacts. Single-file commands are `npm run name|types|businesses -- <input.json>` with `--out <file>` optional; default suffixes are `-named.json`, `-npc-types.json`, `-businesses.json`. Naming/typing require `--theme`; typing/world accept `--ranges '<json>'` and `--stats <file>`. Both creative passes accept `--model <id>`.
 
 Errors: `INVALID_WORLD` (world or coverage), `INVALID_PARAMS` (theme/ranges), `LLM_ERROR` (provider), `COVERAGE_ERROR` (names/types/pools), `RANGE_ERROR` (type counts). See [CONTRACT.md](CONTRACT.md) for the envelope and filesystem/CLI behavior. Story naming and the Quests merge remain proposals in [docs/ISSUES.md](docs/ISSUES.md).
