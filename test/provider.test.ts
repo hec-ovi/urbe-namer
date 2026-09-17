@@ -40,6 +40,20 @@ it('selects the Anthropic credentials and default model without output caps', as
   expect(body).not.toHaveProperty('max_completion_tokens');
 });
 
+it('retries a busy provider and reports the failure when it stays busy', async () => {
+  vi.stubEnv('LLM_MODEL', 'picked');
+  let busy = 2;
+  vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (busy-- > 0) return new Response('busy', { status: 503, headers: { 'retry-after': '0.01' } });
+    return modelFetch(input, init);
+  });
+  const named = await runNamingPass(world, params);
+  expect(named.meta.naming.model).toBe('picked');
+
+  vi.stubGlobal('fetch', async () => new Response('busy', { status: 503 }));
+  await expect(runNamingPass(world, params)).rejects.toMatchObject({ code: 'LLM_ERROR', message: 'provider failure: HTTP 503' });
+});
+
 it('reports provider failure through the public error envelope', async () => {
   vi.stubEnv('LLM_BASE_URL', 'https://unavailable.test');
   await expect(runNamingPass(world, params)).rejects.toMatchObject({ name: 'NamingError', code: 'LLM_ERROR' });

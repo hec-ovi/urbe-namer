@@ -2,6 +2,7 @@ import { NamingError } from "../errors.js";
 import type { ChatModel, ChatRequest } from "./model.js";
 import { parseJson } from "./parse.js";
 import { chatContent } from "./response.js";
+import { TransientFailure, withRetry } from "./retry.js";
 
 /** A local llama.cpp server, the project's default model host. */
 const DEFAULT_BASE_URL = "http://localhost:8080/v1";
@@ -43,6 +44,12 @@ export class OpenAICompatModel implements ChatModel {
   }
 
   async completeJSON(request: ChatRequest): Promise<unknown> {
+    return withRetry(() => this.attempt(request));
+  }
+
+  /** One request. Transient failures are marked for the retry policy; a refused request
+   *  and an answer that is not JSON are final. */
+  private async attempt(request: ChatRequest): Promise<unknown> {
     const body = {
       model: this.id,
       stream: true,
@@ -63,15 +70,31 @@ export class OpenAICompatModel implements ChatModel {
       });
       if (!response.ok) {
         const detail = (await response.text()).slice(0, 500);
-        throw new NamingError("LLM_ERROR", `provider failure: HTTP ${response.status}`, detail);
+        const failure = new NamingError("LLM_ERROR", `provider failure: HTTP ${response.status}`, detail);
+        throw BUSY_STATUS.has(response.status)
+          ? new TransientFailure(failure, retryAfterMs(response))
+          : failure;
       }
       content = await chatContent(response);
     } catch (error) {
-      if (error instanceof NamingError) throw error;
-      throw new NamingError("LLM_ERROR", `provider failure: ${describe(error)}`, error);
+      if (error instanceof TransientFailure) throw error;
+      if (error instanceof NamingError) {
+        // the stream stopped mid-answer: the connection went, not the request
+        if (error.message.includes("stream ended before completion")) throw new TransientFailure(error);
+        throw error;
+      }
+      throw new TransientFailure(new NamingError("LLM_ERROR", `provider failure: ${describe(error)}`, error));
     }
     return parseJson(content);
   }
+}
+
+/** The server is busy, restarting or briefly gone: the same request may work next time. */
+const BUSY_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+function retryAfterMs(response: Response): number | undefined {
+  const seconds = Number(response.headers.get("retry-after"));
+  return Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : undefined;
 }
 
 function apiRoot(baseUrl: string): string {

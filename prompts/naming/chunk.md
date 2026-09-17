@@ -12,7 +12,7 @@ The named districts of this city, for reference:
 
 You are naming entities of kind: {{group}}
 
-Names already taken in this kind (yours must all differ from these and from each other):
+Names taken most recently in this city, across every kind that shares one pool of names with yours (yours must all differ from these and from each other, and from the rest of the city you cannot see here):
 
 {{taken}}
 

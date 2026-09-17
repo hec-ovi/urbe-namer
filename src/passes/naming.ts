@@ -10,6 +10,12 @@ import { SchemaValidator } from "../validate/schemas.js";
 import { NamedWorldValidator } from "../validate/named-world.js";
 import { fewshotFile } from "./fewshots.js";
 import { chunkOutputSchema, districtsOutputSchema } from "./output-schemas.js";
+import { TakenNames } from "./taken-names.js";
+import { mapWithLimit } from "../pool.js";
+
+/** Requests in flight at once. The default provider is one local server, and a hosted one
+ *  rations requests, so the fan-out stays narrow whatever the city's size. */
+const MAX_IN_FLIGHT = 4;
 
 export interface NamingPassOptions {
   /** entities per chunk call; small enough that nothing gets dropped, large enough to stay coherent */
@@ -56,18 +62,15 @@ export class NamingPass {
     const { charter, names: districtNames } = await this.nameDistricts(params.theme, districts);
     const names: Record<string, string> = { ...districtNames };
 
-    const groups = new Map<string, Nameable[]>();
-    for (const entity of rest) {
-      const group = groups.get(entity.group) ?? [];
-      group.push(entity);
-      groups.set(entity.group, group);
-    }
-    const groupResults = await Promise.all(
-      [...groups.entries()].map(([group, entities]) =>
-        this.nameGroup(params.theme, charter, group, entities, districts, names),
-      ),
+    const districtTable = districts
+      .map((d) => `${d.id}: ${districtNames[d.id]} (${d.attrs.kind ?? "district"}, ${d.attrs.tier ?? "?"})`)
+      .join("\n");
+    const taken = new TakenNames();
+    const chunks = this.chunksOf(rest);
+    const chunkResults = await mapWithLimit(chunks, MAX_IN_FLIGHT, (chunk) =>
+      this.nameChunk(params.theme, charter, districtTable, chunk, taken),
     );
-    for (const result of groupResults) Object.assign(names, result);
+    for (const result of chunkResults) Object.assign(names, result);
 
     await this.repair(params.theme, charter, worksheet, names);
 
@@ -101,32 +104,40 @@ export class NamingPass {
     return { charter, names };
   }
 
-  private async nameGroup(
+  /** One batch per call, grouped by kind so a batch shares its few-shot set and its reader. */
+  private chunksOf(entities: Nameable[]): Nameable[][] {
+    const groups = new Map<string, Nameable[]>();
+    for (const entity of entities) {
+      const group = groups.get(entity.group) ?? [];
+      group.push(entity);
+      groups.set(entity.group, group);
+    }
+    const chunks: Nameable[][] = [];
+    for (const group of groups.values()) {
+      for (let i = 0; i < group.length; i += this.chunkSize) chunks.push(group.slice(i, i + this.chunkSize));
+    }
+    return chunks;
+  }
+
+  private async nameChunk(
     theme: string,
     charter: string,
-    group: string,
-    entities: Nameable[],
-    districts: Nameable[],
-    districtNames: Record<string, string>,
+    districtTable: string,
+    chunk: Nameable[],
+    taken: TakenNames,
   ): Promise<Record<string, string>> {
-    const names: Record<string, string> = {};
-    const districtTable = districts
-      .map((d) => `${d.id}: ${districtNames[d.id]} (${d.attrs.kind ?? "district"}, ${d.attrs.tier ?? "?"})`)
-      .join("\n");
-    for (let i = 0; i < entities.length; i += this.chunkSize) {
-      const chunk = entities.slice(i, i + this.chunkSize);
-      const user = this.prompts.render("naming/chunk.md", {
-        theme,
-        charter,
-        group,
-        districts: districtTable,
-        fewshots: this.prompts.render(fewshotFile(group)),
-        taken: Object.values(names).join("\n") || "(none yet)",
-        entities: worksheetJson(chunk),
-      });
-      const schema = chunkOutputSchema(chunk.map((n) => n.id));
-      Object.assign(names, extractNames(await this.completeMap(user, schema)));
-    }
+    const namespace = namespaceOf(chunk[0]);
+    const user = this.prompts.render("naming/chunk.md", {
+      theme,
+      charter,
+      group: chunk[0].group,
+      districts: districtTable,
+      fewshots: this.prompts.render(fewshotFile(chunk[0].group)),
+      taken: taken.recent(namespace, this.chunkSize * 2).join("\n") || "(none yet)",
+      entities: worksheetJson(chunk),
+    });
+    const names = extractNames(await this.completeMap(user, chunkOutputSchema(chunk.map((n) => n.id))));
+    for (const name of Object.values(names)) taken.add(namespace, name);
     return names;
   }
 

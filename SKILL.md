@@ -20,7 +20,7 @@ Run from this repository with Node.js 20 or later and installed dependencies. Us
 | `options` | Naming: `chunkSize=30`, `maxRepairRounds=2`; typing: `maxRepairRounds=2`. |
 | `folder` | For `runWorld`, required directory containing `blueprint.json`. |
 
-Default provider: `LLM_BASE_URL=http://localhost:8080/v1`, optional `LLM_API_KEY`, `LLM_MODEL` or first `/v1/models` entry. `LLM_PROVIDER=anthropic` selects `https://api.anthropic.com/v1`, `ANTHROPIC_API_KEY` and `claude-opus-5`; base URL and model overrides still apply. Requests stream and carry no output-length cap; JSON-only responses remain accepted. Streaming is supported by [llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) and [Anthropic](https://platform.claude.com/docs/en/cli-sdks-libraries/libraries/openai-sdk).
+Default provider: `LLM_BASE_URL=http://localhost:8080/v1`, optional `LLM_API_KEY`, `LLM_MODEL` or first `/v1/models` entry. `LLM_PROVIDER=anthropic` selects `https://api.anthropic.com/v1`, `ANTHROPIC_API_KEY` and `claude-opus-5`; base URL and model overrides still apply. Requests stream and carry no output-length cap; JSON-only responses remain accepted. Naming keeps four requests in flight and tries a busy or dropped call three times. Streaming is supported by [llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) and [Anthropic](https://platform.claude.com/docs/en/cli-sdks-libraries/libraries/openai-sdk).
 
 Library: import from `src/index.ts` with tsx, or `dist/index.js` after `npm run build`.
 

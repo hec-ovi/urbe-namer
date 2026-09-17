@@ -13,7 +13,7 @@ Library entry: `src/index.ts`, compiled to `dist/index.js`. CLI: `npm run name|t
 | `exportBusinesses(namedWorld)` | Named world | [Businesses](schema/businesses.schema.json) |
 | `runWorld(folder, params, populationStats?, model?)` | Folder containing `blueprint.json`, params, optional demographics | `{named, types, businesses}`, the three schemas above |
 
-Passes and folder calls return promises; business export is synchronous. An injected [ChatModel](src/llm/model.ts) supplies its ID and `completeJSON({system, user, schema?})`, returning parsed JSON or throwing `NamingError` with `LLM_ERROR`. Without one, environment settings select the provider. Naming options: `chunkSize` (30), `maxRepairRounds` (2); typing options: `maxRepairRounds` (2). Provider requests set `stream: true`, assemble SSE content, accept ordinary JSON responses when streaming is ignored and carry no output-length cap. No sibling runtime is imported.
+Passes and folder calls return promises; business export is synchronous. An injected [ChatModel](src/llm/model.ts) supplies its ID and `completeJSON({system, user, schema?})`, returning parsed JSON or throwing `NamingError` with `LLM_ERROR`. Without one, environment settings select the provider. Naming options: `chunkSize` (30), `maxRepairRounds` (2); typing options: `maxRepairRounds` (2). Naming sends its batches four at a time whatever the city's size, and each batch carries the names taken most recently in its uniqueness namespace, two batches' worth. Provider requests set `stream: true`, assemble SSE content, accept ordinary JSON responses when streaming is ignored and carry no output-length cap. A busy or dropped provider call is tried three times with widening backoff, honoring `Retry-After`; a refused request, a bad answer and model discovery are not retried. No sibling runtime is imported.
 
 ## Rules and outputs
 
@@ -33,7 +33,7 @@ API failures throw `NamingError {code, message, detail?}` with this closed code 
 | --- | --- |
 | `INVALID_WORLD` | Invalid world/named-world schema or name coverage, empty selection, duplicate selected IDs, invalid businesses projection, or unreadable/unwritable world JSON files. |
 | `INVALID_PARAMS` | Params or population statistics fail their schema, theme is blank, a range is reversed, or loop options are invalid (chunk size must be a positive integer, repair rounds a nonnegative integer). |
-| `LLM_ERROR` | Model discovery, HTTP/transport failure, incomplete stream or malformed provider JSON. Provider calls are not retried. |
+| `LLM_ERROR` | Model discovery, HTTP/transport failure, incomplete stream or malformed provider JSON, a retried call included. |
 | `COVERAGE_ERROR` | Invalid district/charter response, failed naming repair/metadata, malformed types/pools or ungrounded typing output. |
 | `RANGE_ERROR` | Typing repair ends with category count problems only. |
 
