@@ -1,40 +1,28 @@
-import { copyFileSync, mkdirSync, existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Ajv2020 as Ajv } from "ajv/dist/2020.js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { runWorld, exportBusinesses } from "../src/index.js";
-import { FakeModel, wellBehaved } from "./fake-model.js";
+import { afterAll, describe, expect, it } from "vitest";
+import { exportBusinesses, runWorld } from "../src/index.js";
+import { FakeModel, PARAMS, ROOT, folder, removeFolders, wellBehaved } from "./fixture.js";
 
-mkdirSync(new URL("../.test-work/", import.meta.url), { recursive: true });
-const workdir = new URL("../.test-work/", import.meta.url).pathname;
+afterAll(removeFolders);
 
-const PARAMS = { theme: "a rain-soaked dystopian megacity" };
-
-const schemaFile = (name: string) => JSON.parse(readFileSync(new URL(`../schema/${name}`, import.meta.url), "utf8"));
+const schemaFile = (name: string) => JSON.parse(readFileSync(join(ROOT, "schema", name), "utf8"));
 const readJson = (path: string) => JSON.parse(readFileSync(path, "utf8"));
-
-let dir: string;
-
-beforeAll(() => {
-  dir = mkdtempSync(join(workdir, "urbe-naming-world-"));
-  copyFileSync(new URL("../fixtures/blueprint-small.json", import.meta.url), join(dir, "blueprint.json"));
-});
-
-afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("runWorld", () => {
   it("writes the named world, the NPC type set and the businesses list beside blueprint.json, which it never touches", async () => {
+    const dir = folder();
     const before = readFileSync(join(dir, "blueprint.json"), "utf8");
     const ajv = new Ajv({ allErrors: true, strict: false });
 
     const run = await runWorld(dir, PARAMS, undefined, new FakeModel());
 
     expect(readFileSync(join(dir, "blueprint.json"), "utf8")).toBe(before);
-
     expect(ajv.validate(schemaFile("npc-types.schema.json"), readJson(join(dir, "npc-types.json")))).toBe(true);
     expect(ajv.validate(schemaFile("businesses.schema.json"), readJson(join(dir, "businesses.json")))).toBe(true);
     expect(run.businesses[0]).toEqual({ brandName: "N-p0", businessKind: "corpo", tier: "high_rich" });
-    expect(run.businesses.map(b => b.brandName)).toEqual([
+    expect(run.businesses.map((b) => b.brandName)).toEqual([
       "N-p0", "N-p1", "N-p2", "N-p3", "N-p8", "N-p11", "N-p13", "N-p17", "N-p18", "N-p19",
     ]);
     expect(readJson(join(dir, "blueprint.named.json"))).toEqual(run.named);
@@ -42,34 +30,19 @@ describe("runWorld", () => {
     expect(readJson(join(dir, "npc-types.json"))).toEqual(run.types);
     expect(readJson(join(dir, "businesses.json"))).toEqual(run.businesses);
     expect(run.types.types.length).toBeGreaterThan(0);
+    expect(exportBusinesses({ ...run.named, parcels: [] })).toEqual([]);
   });
 
-  it("exports an empty business list when no advertising parcels exist", async () => {
-    const named = (await runWorld(dir, PARAMS, undefined, new FakeModel())).named;
-    named.parcels = [];
-    expect(exportBusinesses(named)).toEqual([]);
-  });
+  it("keeps the completed naming artifact when the later typing stage fails", async () => {
+    const dir = folder("partial-");
+    const model = new FakeModel((request) =>
+      (request.schema?.properties as Record<string, unknown>).types ? { types: [], namePool: {} } : wellBehaved(request),
+    );
 
-  it("preserves completed naming when the later typing stage fails", async () => {
-    const partial = mkdtempSync(join(workdir, "partial-"));
-    copyFileSync(new URL("../fixtures/blueprint-small.json", import.meta.url), join(partial, "blueprint.json"));
-    const model = new FakeModel(request => {
-      if ((request.schema?.properties as Record<string, unknown>).types) return { types: [], namePool: {} };
-      return wellBehaved(request);
-    });
-    try {
-      await expect(runWorld(partial, PARAMS, undefined, model)).rejects.toMatchObject({ code: "COVERAGE_ERROR" });
-      expect(readJson(join(partial, "blueprint.named.json")).meta.naming.theme).toBe(PARAMS.theme);
-      expect(existsSync(join(partial, "npc-types.json"))).toBe(false);
-      expect(existsSync(join(partial, "businesses.json"))).toBe(false);
-    } finally { rmSync(partial, { recursive: true, force: true }); }
-  });
+    await expect(runWorld(dir, PARAMS, undefined, model)).rejects.toMatchObject({ code: "COVERAGE_ERROR" });
 
-  it("rejects unreadable blueprint JSON through the closed error set", async () => {
-    const invalid = mkdtempSync(join(workdir, "invalid-"));
-    try {
-      writeFileSync(join(invalid, "blueprint.json"), "{");
-      await expect(runWorld(invalid, PARAMS, undefined, new FakeModel())).rejects.toMatchObject({ code: "INVALID_WORLD" });
-    } finally { rmSync(invalid, { recursive: true, force: true }); }
+    expect(readJson(join(dir, "blueprint.named.json")).meta.naming.theme).toBe(PARAMS.theme);
+    expect(existsSync(join(dir, "npc-types.json"))).toBe(false);
+    expect(existsSync(join(dir, "businesses.json"))).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import type { ChatRequest } from '../src/index.js';
-import { wellBehaved } from './fake-model.js';
+import { wellBehaved } from './fixture.js';
 
 /** Model transport only; production request construction and response parsing still run. */
 export const requests: { url: string; init?: RequestInit }[] = [];

@@ -1,6 +1,6 @@
 # Naming contract
 
-Version 0.5.0. Names selected world entities from a theme and produces grounded NPC types, personal name pools and business labels.
+Version 0.5.1. Names selected world entities from a theme and produces grounded NPC types, personal name pools and business labels.
 
 ## Calls
 
