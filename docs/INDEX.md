@@ -6,7 +6,7 @@
 
 - [Agent skill](../SKILL.md): calls, defaults and example.
 - [README](../README.md): setup and local verification.
-- [Issues](ISSUES.md): Quests integration and shared decisions.
+- [Issues](ISSUES.md): open cross-box questions.
 - [Changelog](../CHANGELOG.md): current package behavior.
 
 One box. `src/index.ts` and `src/cli.ts` expose it; `passes/` coordinates creative work and normalizes name pools, `world/` selects and patches entities and handles folders, `validate/` enforces schemas and coverage, `llm/` handles transport and its retries, `export/` projects businesses; `json.ts` and `pool.ts` at the root read and write files and bound the requests in flight. Prompts live in `prompts/`, public JSON schemas in `schema/`.

@@ -4,7 +4,7 @@ Version 0.5.0. Names selected world entities from a theme and produces grounded 
 
 ## Calls
 
-Library entry: `src/index.ts`, compiled to `dist/index.js`. CLI: `npm run name|types|businesses|world -- ...`; examples and defaults in [SKILL.md](SKILL.md).
+Library entry: `src/index.ts`, compiled to `dist/index.js`. Public exports: the four calls below, `NamingError`, `OpenAICompatModel`, `WORLD_FILES` and the types re-exported from `src/index.ts`. CLI: `npm run name|types|businesses|world -- ...`; examples and defaults in [SKILL.md](SKILL.md).
 
 | Call | Input schemas | Response schema |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Passes and folder calls return promises; business export is synchronous. An inje
 - Every call that accepts or returns a named world checks it twice: [named world](schema/named-world.schema.json) for structure and the naming metadata block, then coverage in code against the worksheet, which is where the selected set, namespace uniqueness and sign spelling are decided. The schema file alone states structure and metadata; a document that passes it can still be rejected for coverage.
 - Types have a unique machine ID, label, category, boilerplate, optional examples, positive relative weight and grounding in existing district names, parcel uses and tiers. Category counts follow ranges. Given and family pools have at least 20 distinct names each. `given` is the union of `givenByGender.male`, `female`, `neutral`, in that order, deduplicated case-insensitively. Pools allocate no people.
 - Businesses are `{brandName, businessKind, tier}` records in parcel order for named hotel, commerce, mall, restaurant, coffee_shop, corpo and clinic parcels. Empty output is valid. This is the `businesses` field of Materials' rebrand request; the caller supplies its material theme key.
-- `runWorld` reads `blueprint.json` and writes `blueprint.named.json` compact, like the blueprint it carries, then `npc-types.json` and `businesses.json` indented. Reruns replace outputs from the original blueprint. Successful earlier writes remain after a later failure; the folder is not an atomic bundle.
+- `runWorld` reads `blueprint.json` and writes `blueprint.named.json` compact, like the blueprint it carries, then `npc-types.json` and `businesses.json` indented. The CLI `name` command also writes compact named JSON. Reruns replace outputs from the original blueprint. Successful earlier writes remain after a later failure; the folder is not an atomic bundle.
 
 ## Errors
 
