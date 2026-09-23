@@ -12,7 +12,7 @@ Examples of district naming across very different themes (illustrations only, ne
 
 Do two things in one response.
 
-First, write the naming charter for this whole world. Later naming batches for stations, businesses, corporations and civic buildings will follow it without seeing your reasoning, so make it concrete:
+First, write the naming charter for this whole world. Later naming batches for stations, businesses, corporations and civic buildings will follow it without seeing your reasoning, and each of them carries the whole charter next to the theme, so make it concrete and only as long as those batches need, with no restatement of the theme, filler or closing summary. It covers:
 
 - The sound of this world: language roots, morphology, typical word lengths, whether names lean on geography, trades, saints, dynasties, machines, whatever fits the theme.
 - Register per category: how districts, transit, corporations, small businesses and civic institutions each sound, and how poor, mid, rich and high-rich versions of the same kind differ.

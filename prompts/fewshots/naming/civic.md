@@ -6,7 +6,7 @@ A precinct in the port: "Harbor Division Station". A public hospital: "St. Brend
 The watch house at the gate: "The East Gate Watch". A healing house run by an order: "Hospice of the Grey Sisters". The garrison: "The Wall Barracks".
 </example>
 <example theme="dystopian megacity">
-An enforcement precinct: "Compliance Post 12 - Cinder Rows". A charity clinic in the sprawl: "The Open Hand". A corporate military compound: "Meridian Combine Asset Protection, South Yard".
+An enforcement precinct: "Compliance Post 12 - Cinder Rows". A charity clinic in the sprawl: "The Open Hand". A corporate military compound: "Meridian Asset Protection".
 </example>
 <example theme="ancient egyptian city">
 The medjay post by the docks: "Watch of the Mudbrick Shore". A house of healing: "House of Sekhmet's Mercy".
