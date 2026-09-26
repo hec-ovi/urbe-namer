@@ -27,8 +27,8 @@ Build once per checkout: `npm ci`, then `npm run build` writes `dist/`. Every sc
 - Relative paths resolve against the caller's directory (`INIT_CWD`, set by npm), so `npm --prefix <naming box> run world -- <dir> ...` works from anywhere.
 - Model server: `LLM_BASE_URL` (default `http://localhost:8080/v1`, root or `/v1`), `LLM_MODEL` (default the first entry of `GET /v1/models`), `LLM_API_KEY` (optional bearer token). `--model` wins over `LLM_MODEL`. `LLM_PROVIDER=anthropic` selects `https://api.anthropic.com/v1`, `ANTHROPIC_API_KEY` and `claude-opus-5`; base URL and model overrides still apply.
 - Exit 0: stdout is one line, `<dir>: blueprint.named.json, npc-types.json (<n> types), businesses.json (<m> businesses)` with `<dir>` absolute.
-- Exit 1: stderr starts with `usage error: <reason>` followed by the usage, or with `<CODE>: <message>` from the error table below, followed by a JSON detail when the failure carries one (missing ids, a problem list).
-- Stderr also carries progress lines while it runs (`naming: batch 2/6, corporations (30) in 41.2s`, `typing: done, NPC types (11), given names (48), family names (30) in 88.0s`).
+- Stderr carries progress lines while it runs (`naming: batch 2/6, corporations (30) in 41.2s`, `typing: done, NPC types (11), given names (48), family names (30) in 88.0s`).
+- Exit 1: after any progress lines, stderr ends with `usage error: <reason>` and the usage, or with `<CODE>: <message>` from the error table below and a JSON detail when the failure carries one (missing ids, a problem list).
 - `--ranges` and `--stats` feed the typing pass as in the library. Flags may come in any order; an unknown or empty flag, a missing `--theme` or a second input path is a usage error.
 
 Single-file commands: `npm run name -- <world.json> --theme <text> [--model <id>] [--out <file>]`, `npm run types -- <named-world.json> --theme <text> [--model <id>] [--ranges <json>] [--stats <file>] [--out <file>]`, `npm run businesses -- <named-world.json> [--out <file>]`. Default outputs replace `.json` with `-named.json`, `-npc-types.json` and `-businesses.json`; `name` writes compact JSON. They print `<what> written to <file>`.
