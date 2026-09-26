@@ -29,8 +29,9 @@ export function readCharter(raw: unknown): Charter | undefined {
   return { voice, registers: text(fields.registers), motifs: list(fields.motifs).filter((motif) => !bans.bannedWord(motif)), banned };
 }
 
-/** Motifs one batch is offered. Batches run side by side without seeing each other, so each
- *  gets its own turn of the motif list, and no motif ends up in every batch. */
+/** Motifs one batch is offered. The batches of a stage are asked at one stop without seeing
+ *  each other's names, so each gets its own turn of the motif list, and no motif ends up in
+ *  every batch. */
 const MOTIFS_PER_BATCH = 4;
 
 /** The charter as prompt text for the `batch`-th batch of a run. */

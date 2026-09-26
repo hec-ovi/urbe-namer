@@ -1,16 +1,16 @@
 # Authoring a named world
 
-Naming asks every creative question through an author dir and answers none itself. You, an agent or a person, write the answers; the box checks them the way it would check a model's and asks again where they fall short. The exact layout is in [CONTRACT.md](CONTRACT.md#author-dir).
+Naming asks every creative question through an author dir and answers none itself. You, an agent or a person, write the answers; the box checks them the way it would check a model's and asks again where they fall short. The layout follows Quests' [external author](../quests/AUTHORING.md); the exact rules are in [CONTRACT.md](CONTRACT.md#author-dir).
 
 ## Loop
 
 1. Build once: `npm ci && npm run build`.
 2. Put the Atlas blueprint in a folder as `blueprint.json` and run
-   `npm run --silent world -- <folder> --theme "<theme>" --model <your model id>`.
-3. Exit 2 lists request files on stdout, all in `<folder>/author/`. For each `<key>.md`, write `<key>.json` beside it: one JSON document matching the answer schema at the end of the request.
+   `npm run --silent world -- <folder> --theme "<theme>" --external <author-dir> --model <your model id>`.
+3. Exit 2 lists the request files on stdout, all in `<author-dir>/requests/`. For each `requests/<key>.md`, write `<author-dir>/<key>.json`: one JSON document matching the answer schema at the end of the request.
 4. Run the same command again. Repeat until exit 0, which writes `blueprint.named.json`, `npc-types.json` and `businesses.json` beside the blueprint.
 
-A rerun replays every answer on disk, so stopping between rounds loses nothing.
+A rerun replays every answer on disk, so stopping between rounds loses nothing. Keep one author dir per world and theme.
 
 ## Requests in order
 
@@ -29,4 +29,4 @@ A rerun replays every answer on disk, so stopping between rounds loses nothing.
 
 ## Changing an answer
 
-Edit any `<key>.json` and rerun. Requests after it may change with it; an answer written for a request that changed is set aside as `<key>.stale.json` and the request is written again.
+Edit any `<key>.json` and rerun. Each request's `Basis:` line fingerprints what its answer is written for: the theme, the world and the entities it names, or for typing the world summary and the answer it repairs. When that changes, a new theme, another blueprint or an edited earlier answer, the old answer moves to `stale/<key>.<n>.json` and the request is written again. A changed charter or district name keeps the batch answers; the checks send back any name that now breaks them.

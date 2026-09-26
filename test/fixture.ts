@@ -3,7 +3,7 @@
  *  throwaway world folders. */
 
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { AuthorPending } from "../src/errors.js";
 import type { ChatModel, ChatRequest } from "../src/llm/model.js";
@@ -119,24 +119,32 @@ export function requiredIds(schema: Record<string, unknown> | undefined): string
   return properties?.names?.required ?? [];
 }
 
-/** The request an author dir wrote to `file`, read back from its sections. */
+/** The request an author dir wrote to `file`, read back from its sections; `basis` holds the
+ *  fingerprint its header carries. */
 export function readRequest(file: string): ChatRequest {
   const text = readFileSync(file, "utf8");
-  const between = (start: string, end: string) => {
-    const from = text.indexOf(start) + start.length;
-    return text.slice(from, text.indexOf(end, from));
+  const section = (name: string) => {
+    const from = text.indexOf(`======== ${name} ========\n\n`) + name.length + 20;
+    const end = text.indexOf("\n\n========", from);
+    return text.slice(from, end < 0 ? undefined : end).trim();
   };
   return {
     key: basename(file, ".md"),
-    system: between("## System\n\n", "\n\n## User"),
-    user: between("## User\n\n", "\n\n## Answer schema"),
-    schema: JSON.parse(between("```json\n", "\n```")),
+    basis: /^Basis: (\w+)$/m.exec(text)![1],
+    system: section("SYSTEM"),
+    user: section("PROMPT"),
+    schema: JSON.parse(section("ANSWER SCHEMA")),
   };
 }
 
-/** Answers each request file as `handler` would, in `<key>.json` beside it. */
+/** Where the author answers a request file: `<author dir>/<key>.json`, above `requests/`. */
+export function answerFile(request: string): string {
+  return join(dirname(dirname(request)), `${basename(request, ".md")}.json`);
+}
+
+/** Answers each request file as `handler` would. */
 export function answer(files: string[], handler: (request: ChatRequest) => unknown = wellBehaved): void {
-  for (const file of files) writeFileSync(file.replace(/\.md$/, ".json"), JSON.stringify(handler(readRequest(file))));
+  for (const file of files) writeFileSync(answerFile(file), JSON.stringify(handler(readRequest(file))));
 }
 
 /** The stop a run makes for its author. */

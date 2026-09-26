@@ -1,18 +1,15 @@
-<!-- schema {{fingerprint}} -->
-# {{key}}
+Request: {{key}}
+Answer: {{key}}.json
+Basis: {{fingerprint}}
 
-Answer this request with one JSON document matching the answer schema below, saved as `{{key}}.json` beside this file, then run the same command again. The answer goes through the same checks as a model's; anything they reject comes back as a new request.
-
-## System
+======== SYSTEM ========
 
 {{system}}
 
-## User
+======== PROMPT ========
 
 {{user}}
 
-## Answer schema
+======== ANSWER SCHEMA ========
 
-```json
 {{schema}}
-```

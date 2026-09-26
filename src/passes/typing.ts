@@ -70,12 +70,9 @@ export class TypingPass {
       .map(([category, r]) => `${category}: at least ${r.min}, at most ${r.max}`)
       .join("\n");
 
-    const task = this.prompts.render("typing/task.md", {
-      theme: params.theme,
-      summary,
-      ranges: rangesText,
-      fewshots: this.prompts.render("fewshots/typing/types.md"),
-    });
+    /** what every round's prompt shows, and with the world's seed what each answer is written for */
+    const asked = { theme: params.theme, summary, ranges: rangesText };
+    const task = this.prompts.render("typing/task.md", { ...asked, fewshots: this.prompts.render("fewshots/typing/types.md") });
 
     const meta = { theme: params.theme, worldSeed: world.meta.seed, model: this.model.id, createdAt: new Date().toISOString() };
     const elapsed = stopwatch();
@@ -90,16 +87,20 @@ export class TypingPass {
     for (let round = 0; round <= this.maxRepairRounds; round++) {
       const time = stopwatch();
       // until one answer has been read there is nothing to repair, so the task is asked again
-      const user = answer === undefined ? task : this.prompts.render("typing/repair.md", {
-        theme: params.theme,
-        summary,
-        ranges: rangesText,
+      const repair = answer && {
         problems: [...(unreadable ? [`your last answer could not be read (${unreadable}); answer in the requested JSON shape`] : []), ...problems].join("\n"),
         previous: JSON.stringify({ types: answer.types, namePool: modelSide(answer.namePool) }, null, 2),
-      });
+      };
+      const request = {
+        key: `typing-${round + 1}`,
+        basis: JSON.stringify({ seed: meta.worldSeed, ...asked, ...repair }),
+        system: this.prompts.render("typing/system.md"),
+        user: repair ? this.prompts.render("typing/repair.md", { ...asked, ...repair }) : task,
+        schema: typingOutputSchema(ground),
+      };
       let raw: unknown;
       try {
-        raw = await this.model.completeJSON({ key: `typing-${round + 1}`, system: this.prompts.render("typing/system.md"), user, schema: typingOutputSchema(ground) });
+        raw = await this.model.completeJSON(request);
       } catch (error) {
         if (!(error instanceof UnreadableAnswer)) throw error;
         unreadable = error.message;

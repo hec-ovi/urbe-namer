@@ -1,4 +1,4 @@
-import { dirname, join, resolve } from "node:path";
+import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { readJson, writeJsonFile, type JsonLayout } from "./json.js";
 import { AuthorDir, AuthorPending, exportBusinesses, runNamingPass, runTypingPass, runWorld, NamingError } from "./index.js";
@@ -7,22 +7,25 @@ import type { NamedWorld, RunParams, WorldState } from "./types.js";
 import { WORLD_FILES } from "./world/folder.js";
 
 const USAGE = `usage:
-  world      <folder>           --theme "<world description>" [--author <dir>] [--model <id>] [--ranges '<json>'] [--stats <populationStats.json>]
+  world      <folder>           --theme "<world description>" --external <author-dir> [--model <label>] [--ranges '<json>'] [--stats <populationStats.json>]
              reads ${WORLD_FILES.blueprint}, writes ${WORLD_FILES.named}, ${WORLD_FILES.npcTypes} and ${WORLD_FILES.businesses} beside it
-  name       <world.json>       --theme "<world description>" [--author <dir>] [--model <id>] [--out <file>]
-  types      <named-world.json> --theme "<world description>" [--author <dir>] [--model <id>] [--ranges '<json>'] [--stats <populationStats.json>] [--out <file>]
+  name       <world.json>       --theme "<world description>" --external <author-dir> [--model <label>] [--out <file>]
+  types      <named-world.json> --theme "<world description>" --external <author-dir> [--model <label>] [--ranges '<json>'] [--stats <populationStats.json>] [--out <file>]
   businesses <named-world.json> [--out <file>]
-author dir (default: author/ beside the input): each request is <key>.md, its answer <key>.json beside it;
+author dir: the run writes each request to requests/<key>.md, the author answers it in <key>.json;
 exit 2 lists the requests still to answer on stdout; answer them and run the same command again.
 --model names the author in the outputs (default: author).`;
 
 /** The flags each command takes; every flag carries a value. */
 const COMMANDS: Record<string, readonly string[]> = {
-  world: ["theme", "author", "model", "ranges", "stats"],
-  name: ["theme", "author", "model", "out"],
-  types: ["theme", "author", "model", "ranges", "stats", "out"],
+  world: ["theme", "external", "model", "ranges", "stats"],
+  name: ["theme", "external", "model", "out"],
+  types: ["theme", "external", "model", "ranges", "stats", "out"],
   businesses: ["out"],
 };
+
+/** Flags a command cannot run without, when it takes them. */
+const REQUIRED = ["theme", "external"];
 
 class UsageError extends Error {}
 
@@ -56,7 +59,9 @@ function parse(argv: string[]): Args | "help" {
   for (const [flag, value] of Object.entries(flags)) {
     if (value?.trim() === "") throw new UsageError(`--${flag} is empty`);
   }
-  if (allowed.includes("theme") && flags.theme === undefined) throw new UsageError(`${command} needs --theme`);
+  for (const flag of REQUIRED) {
+    if (allowed.includes(flag) && flags[flag] === undefined) throw new UsageError(`${command} needs --${flag}`);
+  }
   return { command, input: here(parsed.positionals[0]), flags };
 }
 
@@ -89,10 +94,8 @@ function runParams(flags: Args["flags"]): RunParams {
   return { theme: flags.theme!, ranges };
 }
 
-/** The author dir: --author, else `author/` beside the input (inside a world folder). */
-function author({ command, input, flags }: Args): AuthorDir {
-  const dir = flags.author ? here(flags.author) : join(command === "world" ? input : dirname(input), "author");
-  return new AuthorDir(dir, flags.model);
+function author(flags: Args["flags"]): AuthorDir {
+  return new AuthorDir(here(flags.external!), flags.model);
 }
 
 function readStats(flags: Args["flags"]): PopulationStats | undefined {
@@ -116,15 +119,15 @@ async function main(argv: string[]): Promise<void> {
   }
   const { command, input, flags } = args;
   if (command === "world") {
-    const run = await runWorld(input, runParams(flags), readStats(flags), author(args), { progress });
+    const run = await runWorld(input, runParams(flags), readStats(flags), author(flags), { progress });
     console.log(
       `${input}: ${WORLD_FILES.named}, ${WORLD_FILES.npcTypes} (${run.types.types.length} types), ${WORLD_FILES.businesses} (${run.businesses.length} businesses)`,
     );
   } else if (command === "name") {
-    const named = await runNamingPass(readJson<WorldState>(input), runParams(flags), author(args), { progress });
+    const named = await runNamingPass(readJson<WorldState>(input), runParams(flags), author(flags), { progress });
     write(args, "-named.json", named, "named world", "compact");
   } else if (command === "types") {
-    const set = await runTypingPass(readJson<NamedWorld>(input), runParams(flags), readStats(flags), author(args), { progress });
+    const set = await runTypingPass(readJson<NamedWorld>(input), runParams(flags), readStats(flags), author(flags), { progress });
     write(args, "-npc-types.json", set, "NPC type set");
   } else {
     write(args, "-businesses.json", exportBusinesses(readJson<NamedWorld>(input)), "businesses list");

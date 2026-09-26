@@ -13,12 +13,7 @@ import { batchLabel, batchTitle, batchesOf, fewshotFile, kindMeaning } from "./b
 import { readCharter, renderCharter, type Charter } from "./charter.js";
 import { chunkOutputSchema, districtsOutputSchema } from "./output-schemas.js";
 import { TakenNames } from "./taken-names.js";
-import { mapWithLimit } from "../pool.js";
 import { stopwatch, type Progress } from "../progress.js";
-
-/** Requests in flight at once: an injected model may be one local server or a rationed hosted
- *  one, so the fan-out stays narrow whatever the city's size. */
-const MAX_IN_FLIGHT = 4;
 
 export interface NamingPassOptions {
   /** entities per batch call; small enough that nothing gets dropped, large enough to stay coherent */
@@ -41,9 +36,14 @@ interface Target extends Nameable {
   word?: string;
 }
 
-/** What every batch prompt of one run shares. */
-interface RunContext {
+/** What every request of one run is about: the theme and the world it names. */
+interface Subject {
   theme: string;
+  seed: string | number;
+}
+
+/** What every batch prompt of one run shares. */
+interface RunContext extends Subject {
   charter: Charter;
   districts: string;
   variety: VarietyCheck;
@@ -89,7 +89,7 @@ export class NamingPass {
     const rest = worksheet.filter((n) => n.group !== "district");
     const names: Record<string, string> = {};
 
-    const context = await this.nameDistricts(params.theme, districts, names);
+    const context = await this.nameDistricts({ theme: params.theme, seed: world.meta.seed }, districts, names);
     const batches = batchesOf(rest, this.chunkSize);
     let done = 0;
     await this.stage(batches, "naming-batch", async (batch, key) => {
@@ -115,25 +115,26 @@ export class NamingPass {
 
   /** One call writes the charter and names the districts; a reply without a usable charter is
    *  asked again whole, and district names that failed go through the repair rounds. */
-  private async nameDistricts(theme: string, districts: Nameable[], names: Record<string, string>): Promise<RunContext> {
+  private async nameDistricts(subject: Subject, districts: Nameable[], names: Record<string, string>): Promise<RunContext> {
     const time = stopwatch();
     const user = this.prompts.render("naming/districts.md", {
-      theme,
+      theme: subject.theme,
       fewshots: this.prompts.render("fewshots/naming/districts.md"),
       entities: entityLines(districts),
     });
     const schema = districtsOutputSchema(districts.map((d) => d.id));
+    const basis = basisOf(subject, districts);
     let raw: unknown;
     let charter: Charter | undefined;
     for (let attempt = 1; attempt <= this.maxRepairRounds + 1 && !charter; attempt++) {
-      raw = await this.ask(`naming-districts-${attempt}`, user, schema);
+      raw = await this.ask(`naming-districts-${attempt}`, basis, user, schema);
       charter = readCharter(raw);
     }
     if (!charter) throw this.failure("the district reply carried no naming charter", undefined);
     Object.assign(names, readNames(raw, districts));
 
     const context: RunContext = {
-      theme,
+      ...subject,
       charter,
       districts: "(the districts are being named)",
       variety: new VarietyCheck(charter.banned),
@@ -163,7 +164,7 @@ export class NamingPass {
       fewshots: this.prompts.render(fewshotFile(batch[0])),
       entities: entityLines(batch),
     });
-    const answer = readNames(await this.ask(key, user, chunkOutputSchema(batch.map((n) => n.id))), batch);
+    const answer = readNames(await this.ask(key, basisOf(context, batch), user, chunkOutputSchema(batch.map((n) => n.id))), batch);
     for (const [id, name] of Object.entries(answer)) {
       names[id] = name;
       context.taken.add(namespace, name);
@@ -171,7 +172,7 @@ export class NamingPass {
   }
 
   /** Rounds of focused re-requests for the entities of `renamable`, judged against the names
-   *  of all of `scope` and batched and fanned out like the first pass, under the request keys
+   *  of all of `scope` and batched like the first pass, under the request keys
    *  `<key>-<round>-<batch>`. */
   private async repair(context: RunContext, names: Record<string, string>, scope: Nameable[], renamable: Nameable[], key: string): Promise<void> {
     for (let round = 1; round <= this.maxRepairRounds; round++) {
@@ -185,18 +186,20 @@ export class NamingPass {
     }
   }
 
-  /** Runs one stage's calls, four in flight, the n-th under the request key `<key>-<n>`.
-   *  Calls an author has yet to answer stop the stage once all of its calls have run, so one
-   *  stop writes every request of the stage. */
+  /** Runs one stage's calls in order, the n-th under the request key `<key>-<n>`. A call its
+   *  author has yet to answer stops the stage only once every call has run, so one stop
+   *  writes every request of the stage. */
   private async stage<T>(items: T[], key: string, run: (item: T, key: string) => Promise<void>): Promise<void> {
     const width = String(items.length).length;
     const pending: AuthorPending[] = [];
-    await mapWithLimit(items, MAX_IN_FLIGHT, (item, index) =>
-      run(item, `${key}-${String(index + 1).padStart(width, "0")}`).catch((error: unknown) => {
+    for (const [index, item] of items.entries()) {
+      try {
+        await run(item, `${key}-${String(index + 1).padStart(width, "0")}`);
+      } catch (error) {
         if (!(error instanceof AuthorPending)) throw error;
         pending.push(error);
-      }),
-    );
+      }
+    }
     if (pending.length > 0) throw AuthorPending.join(pending);
   }
 
@@ -242,7 +245,7 @@ export class NamingPass {
       taken: context.taken.recent(namespace, this.chunkSize * 2).join("\n") || "(none yet)",
       entities: entityLines(batch),
     });
-    const answer = readNames(await this.ask(key, user, chunkOutputSchema(batch.map((n) => n.id))), batch);
+    const answer = readNames(await this.ask(key, basisOf(context, batch), user, chunkOutputSchema(batch.map((n) => n.id))), batch);
 
     // judged against the names as they stand now: batches of this round land in between
     const inUse = new Set<string>();
@@ -275,9 +278,9 @@ export class NamingPass {
   }
 
   /** One model call. An unreadable answer names nothing, so the repair rounds ask again. */
-  private async ask(key: string, user: string, schema: Record<string, unknown>): Promise<unknown> {
+  private async ask(key: string, basis: string, user: string, schema: Record<string, unknown>): Promise<unknown> {
     try {
-      return await this.model.completeJSON({ key, system: this.prompts.render("naming/system.md"), user, schema });
+      return await this.model.completeJSON({ key, basis, system: this.prompts.render("naming/system.md"), user, schema });
     } catch (error) {
       if (!(error instanceof UnreadableAnswer)) throw error;
       this.unreadable.push(error.message);
@@ -293,10 +296,23 @@ export class NamingPass {
   }
 }
 
-function entityLines(entities: (Nameable & Partial<Pick<Target, "problem" | "current" | "word">>)[]): string {
+/** An entity as a request shows it: a rename also carries its current name and problem. */
+type Entity = Nameable & Partial<Pick<Target, "problem" | "current" | "word">>;
+
+function entityLines(entities: Entity[]): string {
   return entities
     .map((n) => JSON.stringify({ id: n.id, placeholder: n.placeholder, ...n.attrs, what: kindMeaning(n), current: n.current, problem: n.problem, word: n.word }))
     .join("\n");
+}
+
+/** What a naming answer is written for: the theme, the world and the entities it names. The
+ *  charter, the district names and the names taken so far are context the checks hold it to. */
+function basisOf({ theme, seed }: Subject, entities: Entity[]): string {
+  return JSON.stringify({
+    theme,
+    seed,
+    entities: entities.map(({ id, placeholder, group, attrs, current, problem, word }) => ({ id, placeholder, group, attrs, current, problem, word })),
+  });
 }
 
 /** Reads the requested ids out of a reply, as `{origin, name}` entries or bare strings,
