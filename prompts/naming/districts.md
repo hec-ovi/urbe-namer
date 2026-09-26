@@ -12,13 +12,13 @@ Examples of district naming across very different themes (illustrations only, ne
 
 Do two things in one response.
 
-First, write the naming charter for this whole world. Later naming batches for stations, businesses, corporations and civic buildings will follow it without seeing your reasoning, and each of them carries the whole charter next to the theme, so make it concrete and only as long as those batches need, with no restatement of the theme, filler or closing summary. It covers:
+First, write the naming charter for this whole world. Every later naming batch (stations, lines, businesses, corporations, civic buildings) receives it next to the theme and follows it without seeing your reasoning, so make each part concrete and short, with no restatement of the theme and no filler.
 
-- The sound of this world: language roots, morphology, typical word lengths, whether names lean on geography, trades, saints, dynasties, machines, whatever fits the theme.
-- Register per category: how districts, transit, corporations, small businesses and civic institutions each sound, and how poor, mid, rich and high-rich versions of the same kind differ.
-- The cliche blacklist: name the lazy defaults this specific theme invites (the obvious prefixes, suffixes and stock names everyone reaches for) and forbid them explicitly.
-- Recurring device, if any: a shared ending inventory, a founding family, a numbering habit for stations. Something that quietly ties the city together.
+- voice: which peoples and languages this city's names come from and how they mix, typical word shapes, and what names lean on (families, trades, landmarks, slang, saints, machines, whatever fits the theme).
+- registers: how districts, transit, corporations, small businesses and civic places each sound, and how the poor and the rich versions of one kind differ. Describe; never list sample words here, because every word listed in the charter gets copied into dozens of names.
+- motifs: 8 to 15 local references a name may draw on: founding families, landmarks, local slang, old trades, disasters, saints, ships, events. Short phrases, specific to this one city, so that a few names echo each of them and the city hangs together.
+- banned: the words this theme tempts every generated city into, the ones any namer reaches for first: stock prefixes and suffixes, genre buzzwords, empty prestige words. Single words, or fragments written with a hyphen such as "-ville" or "neo-". No name anywhere in the city may contain them, so be thorough: 15 to 30 entries.
 
-Second, name every district. District names anchor everything that follows: stations and businesses will reference them. Ground each name in the district's kind and tier, and make the set feel like one city grown over time, not a list produced in one sitting.
+Second, name every district. District names anchor everything that follows: stations and businesses will reference them. Ground each in its kind and tier, write its origin first, and make the set feel like one city grown over time, not a list produced in one sitting.
 
-Return JSON: {"charter": "...", "names": {"<district id>": "<name>", ...}}
+Return JSON: {"charter": {"voice": "...", "registers": "...", "motifs": ["..."], "banned": ["..."]}, "names": {"<district id>": {"origin": "...", "name": "..."}, ...}}

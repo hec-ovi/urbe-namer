@@ -26,6 +26,11 @@ Create the NPC types for this world. Read the summary first: which districts exi
 - grounding: the districts (by name), parcel types and tiers this type is anchored to
 - weight: relative frequency within its category, consistent with the demographics above
 
-Also create the personal name pool for this world: given names and family names ordinary people here would carry. Sort the given names into three lists by the gender they read as here: male, female, neutral. A name belongs to exactly one list; neutral is for names anyone in this world carries, and if the theme's names are not gendered at all, every given name goes there. Give at least 20 distinct given names across the three lists and at least 20 distinct family names; a few dozen given names in total and a few dozen family names make a crowd feel varied, more if the theme's cultures ask for it.
+Also create the personal name pool for this world: given names and family names ordinary people here would carry.
 
-Return JSON: {"types": [...], "namePool": {"givenByGender": {"male": [...], "female": [...], "neutral": [...]}, "family": [...]}}
+- cultures: write this first. Name the real naming traditions the people of this city descend from and how they mix, the way a port draws on many shores and a village on one. The pool draws on them.
+- Real, pronounceable names as people here carry them, spread across all of those cultures and every class, in no particular order: never walk the alphabet, never invent letter clusters, never copy the top of a national frequency list. Ordinary but particular names make a crowd feel real.
+- Sort the given names into three lists by the gender they read as here: male, female, neutral. A name belongs to exactly one list; neutral is for names anyone in this world carries, and if the theme's names are not gendered at all, every given name goes there.
+- Give at least 20 distinct given names across the three lists and at least 20 distinct family names; a few dozen of each make a crowd feel varied, more if the theme's cultures ask for it.
+
+Return JSON: {"types": [...], "namePool": {"cultures": "...", "givenByGender": {"male": [...], "female": [...], "neutral": [...]}, "family": [...]}}

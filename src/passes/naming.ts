@@ -1,37 +1,60 @@
 import type { ChatModel } from "../llm/model.js";
 import type { NamedWorld, Nameable, RunParams, WorldState } from "../types.js";
-import { NamingError } from "../errors.js";
+import { NamingError, UnreadableAnswer } from "../errors.js";
 import { PromptLoader } from "../prompts/loader.js";
 import { WorksheetBuilder } from "../world/worksheet.js";
 import { NamePatcher } from "../world/patcher.js";
 import { CoverageValidator, namespaceOf } from "../validate/coverage.js";
-import { foldForSign } from "../validate/sign.js";
+import { foldForSign, spellsOnSign } from "../validate/sign.js";
 import { SchemaValidator } from "../validate/schemas.js";
 import { NamedWorldValidator } from "../validate/named-world.js";
-import { fewshotFile } from "./fewshots.js";
+import { VarietyCheck, WordUsage, contentWords, pooled, type VarietyProblem } from "../validate/variety.js";
+import { batchLabel, batchTitle, batchesOf, fewshotFile } from "./batches.js";
+import { readCharter, renderCharter, type Charter } from "./charter.js";
 import { chunkOutputSchema, districtsOutputSchema } from "./output-schemas.js";
 import { TakenNames } from "./taken-names.js";
 import { mapWithLimit } from "../pool.js";
+import { stopwatch, type Progress } from "../progress.js";
 
 /** Requests in flight at once. The default provider is one local server, and a hosted one
  *  rations requests, so the fan-out stays narrow whatever the city's size. */
 const MAX_IN_FLIGHT = 4;
 
 export interface NamingPassOptions {
-  /** entities per chunk call; small enough that nothing gets dropped, large enough to stay coherent */
+  /** entities per batch call; small enough that nothing gets dropped, large enough to stay coherent */
   chunkSize?: number;
-  /** repair rounds before COVERAGE_ERROR */
+  /** repair rounds per stage (districts, then the rest) before a failure */
   maxRepairRounds?: number;
+  /** receives one line per finished step */
+  progress?: Progress;
 }
 
-interface DistrictsResult {
-  charter: string;
-  names: Record<string, string>;
+/** Why an entity is named again. The first three break the named world; the rest are
+ *  quality, so a name still flagged for them when the rounds run out stays. */
+type Problem = "missing" | "unsignable" | "duplicate" | VarietyProblem;
+const QUALITY: ReadonlySet<Problem> = new Set(["banned", "overused", "echo"]);
+
+interface Target extends Nameable {
+  problem: Problem;
+  current?: string;
+  /** the banned or overused word, or the echoed name, behind a quality problem */
+  word?: string;
 }
 
-/** Pass 1: names every placeholder. Districts and a naming charter come first (one call
- *  anchors the style), then per-group chunks reuse the charter; the harness merges,
- *  validates coverage and repairs. The LLM never sees or emits world geometry. */
+/** What every batch prompt of one run shares. */
+interface RunContext {
+  theme: string;
+  charter: Charter;
+  districts: string;
+  variety: VarietyCheck;
+  taken: TakenNames;
+  /** batch prompts rendered so far, which picks each batch's turn of the motifs */
+  batches: number;
+}
+
+/** Pass 1: names every placeholder. The districts and the naming charter come first (one
+ *  call anchors the style), then batches of the rest follow the charter; the harness merges,
+ *  checks coverage and variety, and renames what failed. The LLM never sees world geometry. */
 export class NamingPass {
   private readonly prompts = new PromptLoader();
   private readonly worksheets = new WorksheetBuilder();
@@ -41,6 +64,9 @@ export class NamingPass {
   private readonly namedWorlds: NamedWorldValidator = new NamedWorldValidator();
   private readonly chunkSize: number;
   private readonly maxRepairRounds: number;
+  private readonly progress: Progress;
+  /** why answers of the current run could not be read, for the failure that follows them */
+  private unreadable: string[] = [];
 
   constructor(
     private readonly model: ChatModel,
@@ -49,35 +75,32 @@ export class NamingPass {
     this.schemas.options(options);
     this.chunkSize = options.chunkSize ?? 30;
     this.maxRepairRounds = options.maxRepairRounds ?? 2;
+    this.progress = options.progress ?? (() => {});
   }
 
   async run(world: WorldState, params: RunParams): Promise<NamedWorld> {
     this.schemas.params(params);
     this.schemas.assert("world-state.schema.json", world, "INVALID_WORLD", "world state");
+    this.unreadable = [];
+    const elapsed = stopwatch();
 
     const worksheet = this.worksheets.build(world);
     const districts = worksheet.filter((n) => n.group === "district");
     const rest = worksheet.filter((n) => n.group !== "district");
+    const names: Record<string, string> = {};
 
-    const { charter, names: districtNames } = await this.nameDistricts(params.theme, districts);
-    const names: Record<string, string> = { ...districtNames };
-
-    const districtTable = districts
-      .map((d) => `${d.id}: ${districtNames[d.id]} (${d.attrs.kind ?? "district"}, ${d.attrs.tier ?? "?"})`)
-      .join("\n");
-    const taken = new TakenNames();
-    const chunks = this.chunksOf(rest);
-    const chunkResults = await mapWithLimit(chunks, MAX_IN_FLIGHT, (chunk) =>
-      this.nameChunk(params.theme, charter, districtTable, chunk, taken),
-    );
-    for (const result of chunkResults) Object.assign(names, result);
-
-    await this.repair(params.theme, charter, worksheet, names);
+    const context = await this.nameDistricts(params.theme, districts, names);
+    const batches = batchesOf(rest, this.chunkSize);
+    let done = 0;
+    await mapWithLimit(batches, MAX_IN_FLIGHT, async (batch) => {
+      const time = stopwatch();
+      await this.nameBatch(context, batch, names);
+      this.progress(`naming: batch ${++done}/${batches.length}, ${batchTitle(batch[0])} (${batch.length}) in ${time()}`);
+    });
+    await this.repair(context, worksheet, names);
 
     const report = this.coverage.check(worksheet, names);
-    if (!report.ok) {
-      throw new NamingError("COVERAGE_ERROR", "naming repair loop exhausted", report);
-    }
+    if (!report.ok) throw this.failure("naming repair rounds ran out", report);
 
     const named = this.patcher.apply(
       world,
@@ -85,117 +108,190 @@ export class NamingPass {
       { theme: params.theme, model: this.model.id, namedAt: new Date().toISOString() },
     );
     this.namedWorlds.assert(named, "COVERAGE_ERROR", worksheet);
+    this.progress(`naming: done, names (${worksheet.length}) in ${elapsed()}`);
     return named;
   }
 
-  private async nameDistricts(theme: string, districts: Nameable[]): Promise<DistrictsResult> {
+  /** One call writes the charter and names the districts; a reply without a usable charter is
+   *  asked again whole, and district names that failed go through the repair rounds. */
+  private async nameDistricts(theme: string, districts: Nameable[], names: Record<string, string>): Promise<RunContext> {
+    const time = stopwatch();
     const user = this.prompts.render("naming/districts.md", {
       theme,
-      fewshots: this.prompts.render(fewshotFile("district")),
-      entities: worksheetJson(districts),
+      fewshots: this.prompts.render("fewshots/naming/districts.md"),
+      entities: entityLines(districts),
     });
-    const raw = await this.completeMap(user, districtsOutputSchema(districts.map((d) => d.id)));
-    const charter = typeof (raw as DistrictsResult | null)?.charter === "string" ? (raw as DistrictsResult).charter : "";
-    const names = extractNames(raw);
-    const report = this.coverage.check(districts, names);
-    if (!report.ok || charter.trim() === "") {
-      throw new NamingError("COVERAGE_ERROR", "district naming incomplete or charter missing", report);
+    const schema = districtsOutputSchema(districts.map((d) => d.id));
+    let raw: unknown;
+    let charter: Charter | undefined;
+    for (let attempt = 0; attempt <= this.maxRepairRounds && !charter; attempt++) {
+      raw = await this.ask(user, schema);
+      charter = readCharter(raw);
     }
-    return { charter, names };
-  }
+    if (!charter) throw this.failure("the district reply carried no naming charter", undefined);
+    Object.assign(names, readNames(raw, districts));
 
-  /** One batch per call, grouped by kind so a batch shares its few-shot set and its reader. */
-  private chunksOf(entities: Nameable[]): Nameable[][] {
-    const groups = new Map<string, Nameable[]>();
-    for (const entity of entities) {
-      const group = groups.get(entity.group) ?? [];
-      group.push(entity);
-      groups.set(entity.group, group);
-    }
-    const chunks: Nameable[][] = [];
-    for (const group of groups.values()) {
-      for (let i = 0; i < group.length; i += this.chunkSize) chunks.push(group.slice(i, i + this.chunkSize));
-    }
-    return chunks;
-  }
-
-  private async nameChunk(
-    theme: string,
-    charter: string,
-    districtTable: string,
-    chunk: Nameable[],
-    taken: TakenNames,
-  ): Promise<Record<string, string>> {
-    const namespace = namespaceOf(chunk[0]);
-    const user = this.prompts.render("naming/chunk.md", {
+    const context: RunContext = {
       theme,
       charter,
-      group: chunk[0].group,
-      districts: districtTable,
-      fewshots: this.prompts.render(fewshotFile(chunk[0].group)),
-      taken: taken.recent(namespace, this.chunkSize * 2).join("\n") || "(none yet)",
-      entities: worksheetJson(chunk),
-    });
-    const names = extractNames(await this.completeMap(user, chunkOutputSchema(chunk.map((n) => n.id))));
-    for (const name of Object.values(names)) taken.add(namespace, name);
-    return names;
+      districts: "(the districts are being named)",
+      variety: new VarietyCheck(charter.banned),
+      taken: new TakenNames(),
+      batches: 0,
+    };
+    await this.repair(context, districts, names);
+    const report = this.coverage.check(districts, names);
+    if (!report.ok) throw this.failure("district naming incomplete", report);
+
+    context.districts = districts
+      .map((d) => `${d.id}: ${names[d.id]} (${d.attrs.kind ?? "district"}, ${d.attrs.tier ?? "?"})`)
+      .join("\n") || "(this city has no districts)";
+    for (const district of districts) context.taken.add(namespaceOf(district), names[district.id]);
+    this.progress(`naming: charter and districts (${districts.length}) in ${time()}`);
+    return context;
   }
 
-  /** Harness-side fixes first (drop invented ids), then focused re-requests for what is left. */
-  private async repair(
-    theme: string,
-    charter: string,
-    worksheet: Nameable[],
-    names: Record<string, string>,
-  ): Promise<void> {
-    for (let round = 0; round < this.maxRepairRounds; round++) {
-      const report = this.coverage.check(worksheet, names);
-      for (const id of report.invented) delete names[id];
-      const broken = [...report.missing, ...report.empty, ...report.unsignable, ...report.duplicated];
-      if (broken.length === 0) return;
-
-      const byId = new Map(worksheet.map((n) => [n.id, n]));
-      const entities = broken.map((id) => byId.get(id)).filter((n): n is Nameable => n !== undefined);
-      const namespacesToFix = new Set(entities.map(namespaceOf));
-      const taken = worksheet
-        .filter((n) => namespacesToFix.has(namespaceOf(n)) && names[n.id] && !broken.includes(n.id))
-        .map((n) => `${n.group}: ${names[n.id]}`)
-        .join("\n");
-      const user = this.prompts.render("naming/repair.md", {
-        theme,
-        charter,
-        taken: taken || "(none)",
-        entities: worksheetJson(entities),
-      });
-      const schema = chunkOutputSchema(entities.map((n) => n.id));
-      for (const [id, name] of Object.entries(extractNames(await this.completeMap(user, schema)))) {
-        if (byId.has(id)) names[id] = name;
-      }
+  private async nameBatch(context: RunContext, batch: Nameable[], names: Record<string, string>): Promise<void> {
+    const namespace = namespaceOf(batch[0]);
+    const user = this.prompts.render("naming/chunk.md", {
+      theme: context.theme,
+      charter: renderCharter(context.charter, context.batches++),
+      districts: context.districts,
+      topic: batchLabel(batch[0]),
+      taken: context.taken.recent(namespace, this.chunkSize * 2).join("\n") || "(none yet)",
+      fewshots: this.prompts.render(fewshotFile(batch[0])),
+      entities: entityLines(batch),
+    });
+    const answer = readNames(await this.ask(user, chunkOutputSchema(batch.map((n) => n.id))), batch);
+    for (const [id, name] of Object.entries(answer)) {
+      names[id] = name;
+      context.taken.add(namespace, name);
     }
   }
 
-  private async completeMap(user: string, schema: Record<string, unknown>): Promise<unknown> {
-    return this.model.completeJSON({
-      system: this.prompts.render("naming/system.md"),
-      user,
-      schema,
+  /** Rounds of focused re-requests over `scope`, batched and fanned out like the first pass. */
+  private async repair(context: RunContext, scope: Nameable[], names: Record<string, string>): Promise<void> {
+    for (let round = 1; round <= this.maxRepairRounds; round++) {
+      const { targets, avoid } = this.targets(context.variety, scope, names);
+      if (targets.length === 0) return;
+      const time = stopwatch();
+      await mapWithLimit(batchesOf(targets, this.chunkSize), MAX_IN_FLIGHT, (batch) =>
+        this.renameBatch(context, scope, batch, avoid, names),
+      );
+      this.progress(`naming: repair round ${round}, ${describe(targets)} in ${time()}`);
+    }
+  }
+
+  /** What still needs a name in `scope`: coverage failures first, then variety flags. */
+  private targets(variety: VarietyCheck, scope: Nameable[], names: Record<string, string>): { targets: Target[]; avoid: string[] } {
+    const report = this.coverage.check(scope, names);
+    const broken = new Map<string, Problem>();
+    for (const id of [...report.missing, ...report.empty]) broken.set(id, "missing");
+    for (const id of report.unsignable) broken.set(id, "unsignable");
+    for (const id of report.duplicated) broken.set(id, "duplicate");
+    const quality = variety.check(scope, names);
+    const targets: Target[] = [];
+    for (const entity of scope) {
+      const current = names[entity.id];
+      const problem = broken.get(entity.id);
+      const flag = quality.flagged.get(entity.id);
+      if (problem) targets.push({ ...entity, problem, current });
+      else if (flag) targets.push({ ...entity, problem: flag.problem, word: flag.word, current });
+    }
+    return { targets, avoid: quality.words };
+  }
+
+  private async renameBatch(
+    context: RunContext,
+    scope: Nameable[],
+    batch: Target[],
+    avoid: string[],
+    names: Record<string, string>,
+  ): Promise<void> {
+    const namespace = namespaceOf(batch[0]);
+    const user = this.prompts.render("naming/repair.md", {
+      theme: context.theme,
+      charter: renderCharter(context.charter, context.batches++),
+      districts: context.districts,
+      topic: batchLabel(batch[0]),
+      avoid: avoid.join(", ") || "(none)",
+      taken: context.taken.recent(namespace, this.chunkSize * 2).join("\n") || "(none yet)",
+      entities: entityLines(batch),
     });
+    const answer = readNames(await this.ask(user, chunkOutputSchema(batch.map((n) => n.id))), batch);
+
+    // judged against the names as they stand now: batches of this round land in between
+    const inUse = new Set<string>();
+    for (const n of scope) {
+      const name = names[n.id];
+      // a parcel also leaves district and station names alone
+      if (name && (namespaceOf(n) === namespace || (pooled(batch[0]) && !pooled(n)))) inUse.add(name.toLowerCase());
+    }
+    const usage = new WordUsage(scope, names);
+    for (const target of batch) {
+      const name = answer[target.id];
+      if (name === undefined) continue;
+      // a valid name is only traded for a clean one, so a quality round never breaks the world
+      if (QUALITY.has(target.problem) && !this.clean(context, target, name, inUse, usage)) continue;
+      if (pooled(target)) usage.trade(target.current, name);
+      names[target.id] = name;
+      inUse.add(name.toLowerCase());
+      context.taken.add(namespace, name);
+    }
+  }
+
+  /** Signable, unused, free of banned words and of the word it was flagged for, and adding
+   *  no word the pool already carries to the limit. */
+  private clean(context: RunContext, target: Target, name: string, inUse: Set<string>, usage: WordUsage): boolean {
+    return spellsOnSign(name)
+      && !inUse.has(name.toLowerCase())
+      && !context.variety.bannedWord(name)
+      && !(target.problem === "overused" && contentWords(name).includes(target.word!))
+      && (!pooled(target) || usage.admits(target.current, name));
+  }
+
+  /** One model call. An unreadable answer names nothing, so the repair rounds ask again. */
+  private async ask(user: string, schema: Record<string, unknown>): Promise<unknown> {
+    try {
+      return await this.model.completeJSON({ system: this.prompts.render("naming/system.md"), user, schema });
+    } catch (error) {
+      if (!(error instanceof UnreadableAnswer)) throw error;
+      this.unreadable.push(error.message);
+      return undefined;
+    }
+  }
+
+  /** Rounds ran out. Unreadable answers on the way make it the model's failure. */
+  private failure(message: string, detail: unknown): NamingError {
+    if (this.unreadable.length === 0) return new NamingError("COVERAGE_ERROR", message, detail);
+    const reasons = [...new Set(this.unreadable)].join("; ");
+    return new NamingError("LLM_ERROR", `${message}; ${this.unreadable.length} model answers could not be read: ${reasons}`, detail);
   }
 }
 
-function worksheetJson(entities: Nameable[]): string {
+function entityLines(entities: (Nameable & Partial<Pick<Target, "problem" | "current" | "word">>)[]): string {
   return entities
-    .map((n) => JSON.stringify({ id: n.id, placeholder: n.placeholder, ...n.attrs }))
+    .map((n) => JSON.stringify({ id: n.id, placeholder: n.placeholder, ...n.attrs, current: n.current, problem: n.problem, word: n.word }))
     .join("\n");
 }
 
-/** Reads the id-keyed map out of a reply and folds each name for the sign alphabet. */
-function extractNames(raw: unknown): Record<string, string> {
-  const container = (raw ?? {}) as Record<string, unknown>;
-  const source = container.names && typeof container.names === "object" ? container.names : container;
+/** Reads the requested ids out of a reply, as `{origin, name}` entries or bare strings,
+ *  folding each name onto the sign alphabet. Anything else in the reply is ignored. */
+function readNames(raw: unknown, entities: Nameable[]): Record<string, string> {
+  if (raw === null || typeof raw !== "object") return {};
+  const container = raw as Record<string, unknown>;
+  const source = (container.names !== null && typeof container.names === "object" ? container.names : container) as Record<string, unknown>;
   const names: Record<string, string> = {};
-  for (const [key, value] of Object.entries(source as Record<string, unknown>)) {
-    if (typeof value === "string") names[key] = foldForSign(value);
+  for (const { id } of entities) {
+    const value = source[id];
+    const name = typeof value === "string" ? value : (value as { name?: unknown } | null | undefined)?.name;
+    if (typeof name === "string") names[id] = foldForSign(name);
   }
   return names;
+}
+
+function describe(targets: Target[]): string {
+  const counts = new Map<Problem, number>();
+  for (const target of targets) counts.set(target.problem, (counts.get(target.problem) ?? 0) + 1);
+  return `renames (${targets.length}: ${[...counts].map(([problem, n]) => `${n} ${problem}`).join(", ")})`;
 }

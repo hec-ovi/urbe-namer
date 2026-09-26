@@ -2,19 +2,38 @@
 
 const CATEGORIES = ["resident", "worker", "vendor", "authority", "transit", "street"];
 
+/** Each name comes after its origin: a few words on who or what the place is named after,
+ *  written first so the name grows from something concrete. */
+const NAME_ENTRY = {
+  type: "object",
+  properties: { origin: { type: "string" }, name: { type: "string" } },
+  required: ["origin", "name"],
+  additionalProperties: false,
+};
+
 function nameMapSchema(ids: string[]): Record<string, unknown> {
   return {
     type: "object",
-    properties: Object.fromEntries(ids.map((id) => [id, { type: "string" }])),
+    properties: Object.fromEntries(ids.map((id) => [id, NAME_ENTRY])),
     required: ids,
     additionalProperties: false,
   };
 }
 
+const TEXT_LIST = { type: "array", items: { type: "string" } };
+
 export function districtsOutputSchema(ids: string[]): Record<string, unknown> {
   return {
     type: "object",
-    properties: { charter: { type: "string" }, names: nameMapSchema(ids) },
+    properties: {
+      charter: {
+        type: "object",
+        properties: { voice: { type: "string" }, registers: { type: "string" }, motifs: TEXT_LIST, banned: TEXT_LIST },
+        required: ["voice", "registers", "motifs", "banned"],
+        additionalProperties: false,
+      },
+      names: nameMapSchema(ids),
+    },
     required: ["charter", "names"],
     additionalProperties: false,
   };
@@ -68,6 +87,8 @@ export function typingOutputSchema(ground: {
       namePool: {
         type: "object",
         properties: {
+          // written first: the real naming traditions the pool draws on
+          cultures: { type: "string" },
           givenByGender: {
             type: "object",
             properties: {
@@ -80,7 +101,7 @@ export function typingOutputSchema(ground: {
           },
           family: { type: "array", items: { type: "string" } },
         },
-        required: ["givenByGender", "family"],
+        required: ["cultures", "givenByGender", "family"],
         additionalProperties: false,
       },
     },

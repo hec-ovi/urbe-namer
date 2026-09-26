@@ -5,7 +5,7 @@ export function readJson<T>(path: string, code: NamingErrorCode = "INVALID_WORLD
   try {
     return JSON.parse(readFileSync(path, "utf8")) as T;
   } catch (error) {
-    throw new NamingError(code, `cannot read JSON from ${path}`, error);
+    throw new NamingError(code, `cannot read JSON from ${path}: ${reason(error)}`, error);
   }
 }
 
@@ -18,8 +18,12 @@ export function writeJsonFile(path: string, value: unknown, layout: JsonLayout =
   try {
     writeFileSync(path, JSON.stringify(value, null, layout === "readable" ? 2 : 0) + "\n");
   } catch (error) {
-    throw new NamingError("INVALID_WORLD", `cannot write JSON to ${path}`, error);
+    throw new NamingError("INVALID_WORLD", `cannot write JSON to ${path}: ${reason(error)}`, error);
   }
+}
+
+function reason(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 export function asArray(value: unknown): Record<string, unknown>[] {

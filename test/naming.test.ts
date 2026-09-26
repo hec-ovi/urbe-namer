@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { runNamingPass } from "../src/index.js";
 import type { WorldState } from "../src/types.js";
-import { FakeModel, PARAMS, requiredIds, world } from "./fixture.js";
+import { FakeModel, PARAMS, isDistrictRequest, isRepairRequest, namingAnswer, wellBehaved, world } from "./fixture.js";
 
 function collect(node: unknown, out: Record<string, unknown>[] = []): Record<string, unknown>[] {
   if (Array.isArray(node)) node.forEach((item) => collect(item, out));
@@ -70,16 +70,10 @@ describe("runNamingPass", () => {
   });
 
   it("folds accents onto the sign alphabet and repairs names that cannot spell on a sign", async () => {
-    const model = new FakeModel((request) => {
-      const ids = requiredIds(request.schema);
-      const isRepair = request.user.includes("came back with problems");
-      const unspellable: Record<string, string> = { p1: "Café  Nöir ", p2: "Ж Bar", p3: "A".repeat(33) };
-      const names = Object.fromEntries(
-        ids.map((id) => [id, !isRepair && unspellable[id] ? unspellable[id] : `N-${id}`]),
-      );
-      const wantsCharter = ((request.schema?.required as string[]) ?? []).includes("charter");
-      return wantsCharter ? { charter: "c", names } : { names };
-    });
+    const unspellable: Record<string, string> = { p1: "Café  Nöir ", p2: "Ж Bar", p3: "A".repeat(33) };
+    const model = new FakeModel((request) =>
+      namingAnswer(request, (id) => (!isRepairRequest(request) && unspellable[id]) || `N-${id}`),
+    );
     const named = await runNamingPass(world(), PARAMS, model);
     const byId = new Map(collect(named).map((e) => [e.id, e]));
 
@@ -88,7 +82,43 @@ describe("runNamingPass", () => {
     expect(byId.get("p3")!.name).toBe("N-p3");
   });
 
-  it("reports a blank theme, an unnameable world and unrepairable duplicates by code", async () => {
+  it("renames what breaks the charter's bans, leans on an overused word or copies a district name, keeping a valid name when no clean one comes back", async () => {
+    const word = (id: string) => id.replace(/\d/g, (digit) => "abcdefghij"[Number(digit)]);
+    // three parcels use up "Kiln", p13 copies a district name, the rest lean on "Harbor", and two
+    // never get a clean rename: p19 is offered a used-up word, p20 the very word it was flagged for
+    const offers: Record<string, string> = { p19: "Kiln Again", p20: "Harbor Again" };
+    const model = new FakeModel((request) =>
+      namingAnswer(request, (id) => {
+        if (isRepairRequest(request)) return offers[id] ?? `${word(id)}x`;
+        if (id === "d1") return "Apex Yards";
+        if (id === "p13") return "N-d0";
+        if (!id.startsWith("p")) return `N-${id}`;
+        return ["p0", "p1", "p2"].includes(id) ? `Kiln ${word(id)}` : `Harbor ${word(id)}`;
+      }),
+    );
+    const named = await runNamingPass(world(), PARAMS, model);
+    const byId = new Map(collect(named).map((e) => [e.id, e]));
+    const holders = (prefix: string) => [...byId.values()].filter((e) => String(e.name).startsWith(prefix)).map((e) => e.id);
+
+    expect(byId.get("d1")!.name).toBe("dbx");
+    expect(byId.get("p13")!.name).toBe("pbdx");
+    expect(holders("Kiln")).toEqual(["p0", "p1", "p2"]);
+    expect(holders("Harbor")).toEqual(["p3", "p4", "p6", "p19", "p20"]);
+    expect(byId.get("p19")!.name).toBe("Harbor pbj");
+    expect(model.requests.filter(isRepairRequest).at(-1)!.user).toContain("harbor");
+  });
+
+  it("asks for a missing charter again and reports a blank theme, an unnameable world and unrepairable names by code", async () => {
+    let districtCalls = 0;
+    const lateCharter = new FakeModel((request) =>
+      isDistrictRequest(request) && ++districtCalls === 1 ? { names: {} } : wellBehaved(request),
+    );
+    await runNamingPass(world(), PARAMS, lateCharter);
+    expect(districtCalls).toBe(2);
+
+    const noCharter = new FakeModel((request) => (isDistrictRequest(request) ? { names: {} } : wellBehaved(request)));
+    await expect(runNamingPass(world(), PARAMS, noCharter)).rejects.toMatchObject({ code: "COVERAGE_ERROR" });
+
     await expect(runNamingPass(world(), { theme: " " }, new FakeModel()))
       .rejects.toMatchObject({ code: "INVALID_PARAMS" });
 
@@ -96,12 +126,7 @@ describe("runNamingPass", () => {
     await expect(runNamingPass(empty, PARAMS, new FakeModel()))
       .rejects.toMatchObject({ code: "INVALID_WORLD" });
 
-    const colliding = new FakeModel((request) => {
-      const ids = requiredIds(request.schema);
-      const names = Object.fromEntries(ids.map((id) => [id, id.startsWith("d") ? `N-${id}` : "Same Name"]));
-      const wantsCharter = ((request.schema?.required as string[]) ?? []).includes("charter");
-      return wantsCharter ? { charter: "c", names } : { names };
-    });
+    const colliding = new FakeModel((request) => namingAnswer(request, (id) => (id.startsWith("d") ? `N-${id}` : "Same Name")));
     await expect(runNamingPass(world(), PARAMS, colliding))
       .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
   });

@@ -2,15 +2,15 @@ World theme:
 
 {{theme}}
 
-Naming charter for this world (binding, including its cliche blacklist):
+Naming charter for this world (binding, including its banned list):
 
 {{charter}}
 
-The named districts of this city, for reference:
+The districts of this city:
 
 {{districts}}
 
-You are naming entities of kind: {{group}}
+You are naming: {{topic}}
 
 Names taken most recently in this city, across every kind that shares one pool of names with yours (yours must all differ from these and from each other, and from the rest of the city you cannot see here):
 
@@ -20,8 +20,15 @@ Examples of this kind of naming across very different themes (illustrations only
 
 {{fewshots}}
 
-Name every entity below. One JSON object per line; each carries its district and tier where known. Let the district's name and character bleed into the entity where it feels natural: a port district's diner and a high tower district's diner should not be interchangeable. Vary the naming devices across the batch so it reads like a city that grew, not a themed menu.
+Name every entity below. One JSON object per line; each carries its type, district and tier where known.
+
+- Write the origin first: who or what this particular place is named after. Draw on this batch's motifs, on the people and trades of this city, on what stands next door.
+- Vary the naming devices across the batch: family names, places, trades, objects, slang, numbers, plain descriptions, a joke that stuck. Vary the shape too: one word, two words, a possessive, a number, a short phrase. It should read like a city that grew over decades, not a themed menu.
+- Words are written out in full, as a sign painter would letter them: no clipped words, though a company may go by an acronym. No two names of the batch share a distinctive word.
+- A name never misleads about its type: a coffee shop does not sound like a freight firm, nor a hotel like a holding company.
+- One name of the batch at most echoes a district's name, and none copies it whole; the rest stand on their own.
+- Poor places sound worn and local, rich ones curated; a clinic, a hotel and a noodle bar never sound like siblings.
 
 {{entities}}
 
-Return JSON: {"names": {"<entity id>": "<name>", ...}}
+Return JSON: {"names": {"<entity id>": {"origin": "...", "name": "..."}, ...}}

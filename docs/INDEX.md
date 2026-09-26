@@ -9,6 +9,6 @@
 - [Issues](ISSUES.md): open cross-box questions.
 - [Changelog](../CHANGELOG.md): current package behavior.
 
-One box. `src/index.ts` and `src/cli.ts` expose it; `passes/` coordinates creative work and normalizes name pools, `world/` selects and patches entities and handles folders, `validate/` enforces schemas and coverage, `llm/` handles transport and its retries, `export/` projects businesses; `json.ts` and `pool.ts` at the root read and write files and bound the requests in flight. Prompts live in `prompts/`, public JSON schemas in `schema/`.
+One box. `src/index.ts` and `src/cli.ts` expose it, built to `dist/` for the CLI scripts; `passes/` coordinates creative work (charter, batches, name pools), `world/` selects and patches entities and handles folders, `validate/` enforces schemas, coverage and name variety, `llm/` handles transport and its retries, `export/` projects businesses; `json.ts`, `pool.ts` and `progress.ts` at the root read and write files, bound the requests in flight and time progress lines. Prompts live in `prompts/`, public JSON schemas in `schema/`.
 
-Tests call the library and CLI entry points with injected model responses. Test artifacts stay in `.test-work/`; no sibling runtime or model server is required.
+Tests build the box, then call the library and the CLI scripts with injected model responses. Test artifacts stay in `.test-work/`; no sibling runtime or model server is required.

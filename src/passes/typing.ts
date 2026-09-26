@@ -1,13 +1,13 @@
 import type { ChatModel } from "../llm/model.js";
 import type { NamedWorld, NpcType, NpcTypeSet, RunParams } from "../types.js";
-import { NamingError } from "../errors.js";
+import { NamingError, UnreadableAnswer } from "../errors.js";
 import { PromptLoader } from "../prompts/loader.js";
 import { SchemaValidator } from "../validate/schemas.js";
 import { NamedWorldValidator } from "../validate/named-world.js";
 import { typingOutputSchema } from "./output-schemas.js";
 import { asArray } from "../json.js";
-
-import { emptyPool, extractPool, modelSide } from "./name-pool.js";
+import { stopwatch, type Progress } from "../progress.js";
+import { extractPool, modelSide, poolProblems } from "./name-pool.js";
 
 /** simulation's PopulationStats (../simulation/src/schemas/population.ts), consumed loosely. */
 export interface PopulationStats {
@@ -34,16 +34,20 @@ const DEFAULT_RANGES: Record<string, { min: number; max: number }> = {
 
 export interface TypingPassOptions {
   maxRepairRounds?: number;
+  /** receives one line per finished step */
+  progress?: Progress;
 }
 
 /** Pass 2: creates the dynamic NPC type strings with a prompt boilerplate each.
  *  One call over a statistics summary of the named world; ranges are minimums and
- *  maximums, never quotas; grounding may only reference what the world contains. */
+ *  maximums, never quotas; grounding may only reference what the world contains.
+ *  Repair rounds fix broken answers and name pools that read like a generator's. */
 export class TypingPass {
   private readonly prompts = new PromptLoader();
   private readonly schemas = new SchemaValidator();
   private readonly namedWorlds: NamedWorldValidator = new NamedWorldValidator();
   private readonly maxRepairRounds: number;
+  private readonly progress: Progress;
 
   constructor(
     private readonly model: ChatModel,
@@ -51,6 +55,7 @@ export class TypingPass {
   ) {
     this.schemas.options(options);
     this.maxRepairRounds = options.maxRepairRounds ?? 2;
+    this.progress = options.progress ?? (() => {});
   }
 
   async run(world: NamedWorld, params: RunParams, stats?: PopulationStats): Promise<NpcTypeSet> {
@@ -65,7 +70,7 @@ export class TypingPass {
       .map(([category, r]) => `${category}: at least ${r.min}, at most ${r.max}`)
       .join("\n");
 
-    let user = this.prompts.render("typing/task.md", {
+    const task = this.prompts.render("typing/task.md", {
       theme: params.theme,
       summary,
       ranges: rangesText,
@@ -73,45 +78,56 @@ export class TypingPass {
     });
 
     const meta = { theme: params.theme, worldSeed: world.meta.seed, model: this.model.id, createdAt: new Date().toISOString() };
-    let types: NpcType[] = [];
-    let namePool = emptyPool();
+    const elapsed = stopwatch();
+    /** the latest readable answer and what is wrong with it */
+    let answer: Pick<NpcTypeSet, "types" | "namePool"> | undefined;
+    let broken: string[] = [];
     let problems: string[] = [];
+    /** why the latest answer could not be read, when it could not */
+    let unreadable: string | undefined;
+    /** the latest answer without broken parts: a name pool that only reads poorly is still usable */
+    let usable: Pick<NpcTypeSet, "types" | "namePool"> | undefined;
     for (let round = 0; round <= this.maxRepairRounds; round++) {
-      if (round > 0) {
-        user = this.prompts.render("typing/repair.md", {
-          theme: params.theme,
-          summary,
-          ranges: rangesText,
-          problems: problems.join("\n"),
-          previous: JSON.stringify({ types, namePool: modelSide(namePool) }, null, 2),
-        });
-      }
-      const raw = await this.model.completeJSON({
-        system: this.prompts.render("typing/system.md"),
-        user,
-        schema: typingOutputSchema(ground),
+      const time = stopwatch();
+      // until one answer has been read there is nothing to repair, so the task is asked again
+      const user = answer === undefined ? task : this.prompts.render("typing/repair.md", {
+        theme: params.theme,
+        summary,
+        ranges: rangesText,
+        problems: [...(unreadable ? [`your last answer could not be read (${unreadable}); answer in the requested JSON shape`] : []), ...problems].join("\n"),
+        previous: JSON.stringify({ types: answer.types, namePool: modelSide(answer.namePool) }, null, 2),
       });
-      types = extractTypes(raw);
-      namePool = extractPool(raw);
+      let raw: unknown;
       try {
-        this.schemas.assert("npc-types.schema.json", { meta, types, namePool }, "COVERAGE_ERROR", "NPC type set");
-        problems = this.validate(types, ranges, ground);
+        raw = await this.model.completeJSON({ system: this.prompts.render("typing/system.md"), user, schema: typingOutputSchema(ground) });
+      } catch (error) {
+        if (!(error instanceof UnreadableAnswer)) throw error;
+        unreadable = error.message;
+        this.progress(`typing: round ${round + 1}, unreadable answer in ${time()}`);
+        continue;
+      }
+      unreadable = undefined;
+      answer = { types: extractTypes(raw), namePool: extractPool(raw) };
+      try {
+        this.schemas.assert("npc-types.schema.json", { meta, ...answer }, "COVERAGE_ERROR", "NPC type set");
+        broken = this.validate(answer.types, ranges, ground);
       } catch (error) {
         if (!(error instanceof NamingError)) throw error;
-        problems = [error.message];
+        broken = [error.message];
       }
+      if (broken.length === 0) usable = answer;
+      problems = [...broken, ...poolProblems(answer.namePool)];
+      this.progress(`typing: round ${round + 1}, NPC types (${answer.types.length}), problems (${problems.length}) in ${time()}`);
       if (problems.length === 0) break;
     }
-    if (problems.length > 0) {
-      const rangeOnly = problems.every((p) => p.startsWith("range:"));
-      throw new NamingError(
-        rangeOnly ? "RANGE_ERROR" : "COVERAGE_ERROR",
-        "typing repair loop exhausted",
-        problems,
-      );
+    if (!usable) {
+      if (unreadable) throw new NamingError("LLM_ERROR", `typing repair rounds ran out; the last answer could not be read: ${unreadable}`, problems);
+      const rangeOnly = broken.every((p) => p.startsWith("range:"));
+      throw new NamingError(rangeOnly ? "RANGE_ERROR" : "COVERAGE_ERROR", "typing repair rounds ran out", problems);
     }
-
-    return { meta, types, namePool };
+    const { given, family } = usable.namePool;
+    this.progress(`typing: done, NPC types (${usable.types.length}), given names (${given.length}), family names (${family.length}) in ${elapsed()}`);
+    return { meta, ...usable };
   }
 
   /** What the world actually contains: the closed reference space for grounding. */

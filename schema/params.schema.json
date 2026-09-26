@@ -6,7 +6,7 @@
   "required": ["theme"],
   "properties": {
     "theme": { "type": "string", "minLength": 1, "description": "world description prompt: dystopian, modern, 1950 industrial, egyptian, medieval, anything" },
-    "model": { "type": "string" },
+    "model": { "type": "string", "minLength": 1, "description": "model id; overrides LLM_MODEL and the served model" },
     "ranges": {
       "type": "object",
       "description": "typing pass only: min and max types per category, never exact quotas",

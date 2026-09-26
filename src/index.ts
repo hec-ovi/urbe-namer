@@ -4,13 +4,15 @@ import { OpenAICompatModel } from "./llm/openai-compat.js";
 import { NamingPass, type NamingPassOptions } from "./passes/naming.js";
 import { TypingPass, type PopulationStats, type TypingPassOptions } from "./passes/typing.js";
 import { WorldFolder } from "./world/folder.js";
-import { WorldPipeline, type WorldRun } from "./world/pipeline.js";
+import { WorldPipeline, type WorldOptions, type WorldRun } from "./world/pipeline.js";
 import { SchemaValidator } from "./validate/schemas.js";
 
 export type { ChatModel, ChatRequest } from "./llm/model.js";
 export type { Business, NamedWorld, NamedWorldMeta, NameGender, NamePool, Nameable, NpcType, NpcTypeSet, RunParams, WorldState } from "./types.js";
-export type { PopulationStats } from "./passes/typing.js";
-export type { WorldRun } from "./world/pipeline.js";
+export type { PopulationStats, TypingPassOptions } from "./passes/typing.js";
+export type { NamingPassOptions } from "./passes/naming.js";
+export type { WorldOptions, WorldRun } from "./world/pipeline.js";
+export type { Progress } from "./progress.js";
 export { WORLD_FILES } from "./world/folder.js";
 export { NamingError, type NamingErrorCode } from "./errors.js";
 export { OpenAICompatModel } from "./llm/openai-compat.js";
@@ -53,6 +55,7 @@ export async function runWorld(
   params: RunParams,
   stats?: PopulationStats,
   model?: ChatModel,
+  options?: WorldOptions,
 ): Promise<WorldRun> {
-  return new WorldPipeline(model ?? (await resolveModel(params))).run(new WorldFolder(folder), params, stats);
+  return new WorldPipeline(model ?? (await resolveModel(params)), options).run(new WorldFolder(folder), params, stats);
 }

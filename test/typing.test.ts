@@ -39,6 +39,17 @@ describe("runTypingPass", () => {
       .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
   });
 
+  it("asks again for a name pool that walks the alphabet and keeps the valid set when it still does", async () => {
+    const female = [...POOL.givenByGender.female, "Aria", "Bex", "Cora", "Dina", "Elara"];
+    const namePool = { ...POOL, givenByGender: { ...POOL.givenByGender, female } };
+    const model = new FakeModel(() => ({ types: GOOD_TYPES, namePool }));
+    const set = await runTypingPass(named, PARAMS, undefined, model, { maxRepairRounds: 1 });
+
+    expect(model.requests).toHaveLength(2);
+    expect(model.requests[1].user).toContain("walk the alphabet (Aria, Bex, Cora, Dina, Elara)");
+    expect(set.namePool.givenByGender.female).toEqual(female);
+  });
+
   it("throws RANGE_ERROR when type counts stay outside the given ranges", async () => {
     const model = new FakeModel(() => ({ types: GOOD_TYPES, namePool: POOL }));
     await expect(runTypingPass(named, { ...PARAMS, ranges: { worker: { min: 2, max: 5 } } }, undefined, model))

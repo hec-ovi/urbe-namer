@@ -37,13 +37,16 @@ export class SchemaValidator {
     }
   }
 
-  options(options: { chunkSize?: number; maxRepairRounds?: number }): void {
+  options(options: { chunkSize?: number; maxRepairRounds?: number; progress?: unknown }): void {
     if (!options || typeof options !== "object") throw new NamingError("INVALID_PARAMS", "options must be an object");
     for (const [key, min] of [["chunkSize", 1], ["maxRepairRounds", 0]] as const) {
       const value = options[key];
       if (value !== undefined && (!Number.isInteger(value) || value < min)) {
         throw new NamingError("INVALID_PARAMS", `${key} must be an integer >= ${min}`);
       }
+    }
+    if (options.progress !== undefined && typeof options.progress !== "function") {
+      throw new NamingError("INVALID_PARAMS", "progress must be a function");
     }
   }
 }

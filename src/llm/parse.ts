@@ -1,4 +1,4 @@
-import { NamingError } from "../errors.js";
+import { UnreadableAnswer } from "../errors.js";
 
 /** Parses model output as JSON, tolerating a fenced code block around it. */
 export function parseJson(text: string): unknown {
@@ -8,6 +8,6 @@ export function parseJson(text: string): unknown {
   try {
     return JSON.parse(body);
   } catch {
-    throw new NamingError("LLM_ERROR", "model output is not valid JSON", { text: text.slice(0, 500) });
+    throw new UnreadableAnswer("model output is not valid JSON", { text: text.slice(0, 500) });
   }
 }

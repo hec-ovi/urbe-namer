@@ -1,11 +1,15 @@
 import type { NamingError } from "../errors.js";
 
-/** Attempts per provider call, including the first. */
-const ATTEMPTS = 3;
+/** Attempts per provider call, including the first. With the waits below they span about
+ *  ninety seconds, long enough for a local server to reload its model after a crash. */
+const ATTEMPTS = 7;
 /** First backoff; each further wait doubles it. */
-const BASE_DELAY_MS = 200;
+const BASE_DELAY_MS = 2_000;
 /** Ceiling for one wait, including a provider's own Retry-After. */
 const MAX_DELAY_MS = 30_000;
+
+/** The server is busy, restarting or briefly gone: the same request may work next time. */
+export const BUSY_STATUS: ReadonlySet<number> = new Set([408, 425, 429, 500, 502, 503, 504]);
 
 /** A provider failure worth trying again: the connection dropped, the stream stopped
  *  mid-answer, or the server said it is busy. Carries the failure the caller sees when

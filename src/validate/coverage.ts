@@ -12,8 +12,6 @@ export interface CoverageReport {
   ok: boolean;
   /** worksheet ids the map did not name */
   missing: string[];
-  /** map ids that do not exist in the worksheet */
-  invented: string[];
   /** ids whose name is empty or whitespace */
   empty: string[];
   /** ids whose name does not spell in the sign alphabet or runs past its length */
@@ -22,21 +20,14 @@ export interface CoverageReport {
   duplicated: string[];
 }
 
-/** Checks a name map against the worksheet: exact cover, nothing invented, every name
- *  signable, names unique within their namespace. Feeds the repair loop. */
+/** Checks a name map against the worksheet: every entity named, every name signable,
+ *  names unique within their namespace. Feeds the repair rounds. */
 export class CoverageValidator {
   check(worksheet: Nameable[], names: Record<string, string>): CoverageReport {
-    const byId = new Map(worksheet.map((n) => [n.id, n]));
-
     const missing: string[] = [];
-    const invented: string[] = [];
     const empty: string[] = [];
     const unsignable: string[] = [];
     const duplicated: string[] = [];
-
-    for (const id of Object.keys(names)) {
-      if (!byId.has(id)) invented.push(id);
-    }
 
     const groupNames = new Map<string, Map<string, string[]>>();
     for (const entity of worksheet) {
@@ -68,8 +59,8 @@ export class CoverageValidator {
       }
     }
 
-    const ok = missing.length + invented.length + empty.length + unsignable.length + duplicated.length === 0;
-    return { ok, missing, invented, empty, unsignable, duplicated };
+    const ok = missing.length + empty.length + unsignable.length + duplicated.length === 0;
+    return { ok, missing, empty, unsignable, duplicated };
   }
 
   /** Checks the names actually present on the returned world, after patching. */

@@ -85,15 +85,31 @@ export const POOL = {
   family: Array.from({ length: 25 }, (_, i) => `Family${i}`),
 };
 
-/** Naming requests: names each required id "N-<id>", adds a charter when asked.
+/** The charter the scripted model writes: it bans "Apex". */
+export const CHARTER = { voice: "Test voice", registers: "Test registers", motifs: ["the old ferry"], banned: ["Apex"] };
+
+/** Naming requests: each required id named "N-<id>", with the charter when asked.
  *  Typing requests (the schema asks for `types`): the grounded set above. */
 export function wellBehaved(request: ChatRequest): unknown {
   const properties = (request.schema?.properties ?? {}) as Record<string, unknown>;
   if ("types" in properties) return { types: GOOD_TYPES, namePool: POOL };
-  const ids = requiredIds(request.schema);
-  const names = Object.fromEntries(ids.map((id) => [id, `N-${id}`]));
-  const wantsCharter = ((request.schema?.required as string[]) ?? []).includes("charter");
-  return wantsCharter ? { charter: "Test charter", names } : { names };
+  return namingAnswer(request, (id) => `N-${id}`);
+}
+
+/** A naming answer in the requested shape: `nameFor` names each requested id, and a
+ *  district request also gets the charter. */
+export function namingAnswer(request: ChatRequest, nameFor: (id: string) => string): unknown {
+  const names = Object.fromEntries(requiredIds(request.schema).map((id) => [id, { origin: "fixture", name: nameFor(id) }]));
+  return isDistrictRequest(request) ? { charter: CHARTER, names } : { names };
+}
+
+/** A repair request lists each entity with the problem it is renamed for. */
+export function isRepairRequest(request: ChatRequest): boolean {
+  return request.user.includes('"problem":');
+}
+
+export function isDistrictRequest(request: ChatRequest): boolean {
+  return "charter" in ((request.schema?.properties ?? {}) as Record<string, unknown>);
 }
 
 export function requiredIds(schema: Record<string, unknown> | undefined): string[] {
