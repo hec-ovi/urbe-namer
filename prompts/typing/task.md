@@ -28,8 +28,8 @@ Create the NPC types for this world. Read the summary first: which districts exi
 
 Also create the personal name pool for this world: given names and family names ordinary people here would carry.
 
-- cultures: write this first. Name the real naming traditions the people of this city descend from and how they mix, the way a port draws on many shores and a village on one. The pool draws on them.
-- Real, pronounceable names as people here carry them, spread across all of those cultures and every class, in no particular order: never walk the alphabet, never invent letter clusters, never copy the top of a national frequency list. Ordinary but particular names make a crowd feel real.
+- cultures: write this first. Name the real naming traditions the people of this city descend from and a rough share for each, the way a port draws on many shores and a village on one. Given and family names both draw on every one of them in those shares: a city of Vietnamese family names carries Vietnamese given names too.
+- Real, pronounceable names as people here carry them on their papers, across every class, in no particular order: never walk the alphabet, never invent handles or letter clusters, and reach past each culture's most common names: most of the pool lies outside the top fifty of its culture, since a crowd of its commonest names reads as a census table. Ordinary but particular names make a crowd feel real.
 - Sort the given names into three lists by the gender they read as here: male, female, neutral. A name belongs to exactly one list; neutral is for names anyone in this world carries, and if the theme's names are not gendered at all, every given name goes there.
 - Give at least 20 distinct given names across the three lists and at least 20 distinct family names; a few dozen of each make a crowd feel varied, more if the theme's cultures ask for it.
 

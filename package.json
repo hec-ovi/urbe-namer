@@ -1,11 +1,11 @@
 {
   "name": "urbe-naming",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "type": "module",
   "description": "Agentic naming and NPC typing pass for urbe world states",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "test": "vitest run",
     "world": "node dist/cli.js world",
     "name": "node dist/cli.js name",

@@ -84,13 +84,15 @@ describe("runNamingPass", () => {
 
   it("renames what breaks the charter's bans, leans on an overused word or copies a district name, keeping a valid name when no clean one comes back", async () => {
     const word = (id: string) => id.replace(/\d/g, (digit) => "abcdefghij"[Number(digit)]);
-    // three parcels use up "Kiln", p13 copies a district name, the rest lean on "Harbor", and two
-    // never get a clean rename: p19 is offered a used-up word, p20 the very word it was flagged for
-    const offers: Record<string, string> = { p19: "Kiln Again", p20: "Harbor Again" };
+    // three parcels use up "Kiln", p13 copies a district name, the rest lean on "Harbor", and three
+    // never get a clean rename: p19 is offered a used-up word, p20 the very word it was flagged
+    // for, d2 its banned word again
+    const offers: Record<string, string> = { p19: "Kiln Again", p20: "Harbor Again", d2: "Apex Rise" };
     const model = new FakeModel((request) =>
       namingAnswer(request, (id) => {
         if (isRepairRequest(request)) return offers[id] ?? `${word(id)}x`;
         if (id === "d1") return "Apex Yards";
+        if (id === "d2") return "Apex Rise";
         if (id === "p13") return "N-d0";
         if (!id.startsWith("p")) return `N-${id}`;
         return ["p0", "p1", "p2"].includes(id) ? `Kiln ${word(id)}` : `Harbor ${word(id)}`;
@@ -106,9 +108,17 @@ describe("runNamingPass", () => {
     expect(holders("Harbor")).toEqual(["p3", "p4", "p6", "p19", "p20"]);
     expect(byId.get("p19")!.name).toBe("Harbor pbj");
     expect(model.requests.filter(isRepairRequest).at(-1)!.user).toContain("harbor");
+
+    // district names are final once the batches have been prompted with them
+    expect(byId.get("d2")!.name).toBe("Apex Rise");
+    expect(model.requests.filter((request) => isRepairRequest(request) && request.user.includes('"id":"d2"'))).toHaveLength(2);
+    // a motif that uses a banned word never reaches a batch
+    const batches = model.requests.filter((request) => !isDistrictRequest(request));
+    expect(batches.some((request) => request.user.includes("the old ferry"))).toBe(true);
+    expect(batches.some((request) => request.user.includes("tower lights"))).toBe(false);
   });
 
-  it("asks for a missing charter again and reports a blank theme, an unnameable world and unrepairable names by code", async () => {
+  it("asks for a missing charter again and reports a blank theme or model, an unnameable world and unrepairable names by code", async () => {
     let districtCalls = 0;
     const lateCharter = new FakeModel((request) =>
       isDistrictRequest(request) && ++districtCalls === 1 ? { names: {} } : wellBehaved(request),
@@ -119,8 +129,9 @@ describe("runNamingPass", () => {
     const noCharter = new FakeModel((request) => (isDistrictRequest(request) ? { names: {} } : wellBehaved(request)));
     await expect(runNamingPass(world(), PARAMS, noCharter)).rejects.toMatchObject({ code: "COVERAGE_ERROR" });
 
-    await expect(runNamingPass(world(), { theme: " " }, new FakeModel()))
-      .rejects.toMatchObject({ code: "INVALID_PARAMS" });
+    for (const params of [{ theme: " " }, { ...PARAMS, model: "  " }]) {
+      await expect(runNamingPass(world(), params, new FakeModel())).rejects.toMatchObject({ code: "INVALID_PARAMS" });
+    }
 
     const empty = { meta: { seed: 1 }, districts: [], parcels: [] } as unknown as WorldState;
     await expect(runNamingPass(empty, PARAMS, new FakeModel()))

@@ -9,7 +9,7 @@ import { foldForSign, spellsOnSign } from "../validate/sign.js";
 import { SchemaValidator } from "../validate/schemas.js";
 import { NamedWorldValidator } from "../validate/named-world.js";
 import { VarietyCheck, WordUsage, contentWords, pooled, type VarietyProblem } from "../validate/variety.js";
-import { batchLabel, batchTitle, batchesOf, fewshotFile } from "./batches.js";
+import { batchLabel, batchTitle, batchesOf, fewshotFile, kindMeaning } from "./batches.js";
 import { readCharter, renderCharter, type Charter } from "./charter.js";
 import { chunkOutputSchema, districtsOutputSchema } from "./output-schemas.js";
 import { TakenNames } from "./taken-names.js";
@@ -97,7 +97,8 @@ export class NamingPass {
       await this.nameBatch(context, batch, names);
       this.progress(`naming: batch ${++done}/${batches.length}, ${batchTitle(batch[0])} (${batch.length}) in ${time()}`);
     });
-    await this.repair(context, worksheet, names);
+    // district names are final: every batch prompt has shown them, and names lean on them
+    await this.repair(context, worksheet, names, rest);
 
     const report = this.coverage.check(worksheet, names);
     if (!report.ok) throw this.failure("naming repair rounds ran out", report);
@@ -169,10 +170,11 @@ export class NamingPass {
     }
   }
 
-  /** Rounds of focused re-requests over `scope`, batched and fanned out like the first pass. */
-  private async repair(context: RunContext, scope: Nameable[], names: Record<string, string>): Promise<void> {
+  /** Rounds of focused re-requests for the entities of `renamable`, judged against the names
+   *  of all of `scope` and batched and fanned out like the first pass. */
+  private async repair(context: RunContext, scope: Nameable[], names: Record<string, string>, renamable = scope): Promise<void> {
     for (let round = 1; round <= this.maxRepairRounds; round++) {
-      const { targets, avoid } = this.targets(context.variety, scope, names);
+      const { targets, avoid } = this.targets(context.variety, scope, names, renamable);
       if (targets.length === 0) return;
       const time = stopwatch();
       await mapWithLimit(batchesOf(targets, this.chunkSize), MAX_IN_FLIGHT, (batch) =>
@@ -182,8 +184,13 @@ export class NamingPass {
     }
   }
 
-  /** What still needs a name in `scope`: coverage failures first, then variety flags. */
-  private targets(variety: VarietyCheck, scope: Nameable[], names: Record<string, string>): { targets: Target[]; avoid: string[] } {
+  /** What in `renamable` still needs a name: coverage failures first, then variety flags. */
+  private targets(
+    variety: VarietyCheck,
+    scope: Nameable[],
+    names: Record<string, string>,
+    renamable: Nameable[],
+  ): { targets: Target[]; avoid: string[] } {
     const report = this.coverage.check(scope, names);
     const broken = new Map<string, Problem>();
     for (const id of [...report.missing, ...report.empty]) broken.set(id, "missing");
@@ -191,7 +198,7 @@ export class NamingPass {
     for (const id of report.duplicated) broken.set(id, "duplicate");
     const quality = variety.check(scope, names);
     const targets: Target[] = [];
-    for (const entity of scope) {
+    for (const entity of renamable) {
       const current = names[entity.id];
       const problem = broken.get(entity.id);
       const flag = quality.flagged.get(entity.id);
@@ -271,7 +278,7 @@ export class NamingPass {
 
 function entityLines(entities: (Nameable & Partial<Pick<Target, "problem" | "current" | "word">>)[]): string {
   return entities
-    .map((n) => JSON.stringify({ id: n.id, placeholder: n.placeholder, ...n.attrs, current: n.current, problem: n.problem, word: n.word }))
+    .map((n) => JSON.stringify({ id: n.id, placeholder: n.placeholder, ...n.attrs, what: kindMeaning(n), current: n.current, problem: n.problem, word: n.word }))
     .join("\n");
 }
 

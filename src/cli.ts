@@ -30,14 +30,18 @@ interface Args {
   flags: Record<string, string | undefined>;
 }
 
-function parse(argv: string[]): Args {
+/** The parsed command line, or "help" when it asks for the usage. */
+function parse(argv: string[]): Args | "help" {
   const [command = "", ...rest] = argv;
+  if (HELP.has(command)) return "help";
   const allowed = COMMANDS[command];
   if (!allowed) throw new UsageError(command ? `unknown command "${command}"` : "no command given");
+  const args = withValues(rest, allowed);
+  if (args.some((arg) => HELP.has(arg))) return "help";
   let parsed: ReturnType<typeof parseArgs>;
   try {
     parsed = parseArgs({
-      args: rest,
+      args,
       allowPositionals: true,
       strict: true,
       options: Object.fromEntries(allowed.map((flag) => [flag, { type: "string" }] as const)),
@@ -52,6 +56,20 @@ function parse(argv: string[]): Args {
   }
   if (allowed.includes("theme") && flags.theme === undefined) throw new UsageError(`${command} needs --theme`);
   return { command, input: here(parsed.positionals[0]), flags };
+}
+
+const HELP = new Set(["--help", "-h"]);
+
+/** Every flag takes a value, so the argument after a known flag is its value even when it
+ *  starts with "-": a free-text theme such as "- rainy port" passes as one argument. */
+function withValues(args: string[], flags: readonly string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--") return [...out, ...args.slice(i)];
+    const known = args[i].startsWith("--") && flags.includes(args[i].slice(2));
+    out.push(known && i + 1 < args.length ? `${args[i]}=${args[++i]}` : args[i]);
+  }
+  return out;
 }
 
 /** npm runs a script from the package root; a relative path means the caller's directory. */
@@ -83,11 +101,11 @@ function write(args: Args, suffix: string, value: unknown, what: string, layout:
 const progress = (line: string): void => console.error(line);
 
 async function main(argv: string[]): Promise<void> {
-  if (argv.includes("--help") || argv.includes("-h")) {
+  const args = parse(argv);
+  if (args === "help") {
     console.log(USAGE);
     return;
   }
-  const args = parse(argv);
   const { command, input, flags } = args;
   if (command === "world") {
     const run = await runWorld(input, runParams(flags), readStats(flags), undefined, { progress });

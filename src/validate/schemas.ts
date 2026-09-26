@@ -31,7 +31,6 @@ export class SchemaValidator {
 
   params(params: RunParams): void {
     this.assert("params.schema.json", params, "INVALID_PARAMS", "params");
-    if (params.theme.trim() === "") throw new NamingError("INVALID_PARAMS", "theme is required");
     for (const [category, range] of Object.entries(params.ranges ?? {})) {
       if (range.min > range.max) throw new NamingError("INVALID_PARAMS", `reversed range for ${category}`);
     }

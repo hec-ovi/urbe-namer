@@ -85,8 +85,8 @@ export const POOL = {
   family: Array.from({ length: 25 }, (_, i) => `Family${i}`),
 };
 
-/** The charter the scripted model writes: it bans "Apex". */
-export const CHARTER = { voice: "Test voice", registers: "Test registers", motifs: ["the old ferry"], banned: ["Apex"] };
+/** The charter the scripted model writes: it bans "Apex", and one of its motifs uses it. */
+export const CHARTER = { voice: "Test voice", registers: "Test registers", motifs: ["the old ferry", "the Apex tower lights"], banned: ["Apex"] };
 
 /** Naming requests: each required id named "N-<id>", with the charter when asked.
  *  Typing requests (the schema asks for `types`): the grounded set above. */

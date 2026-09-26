@@ -39,15 +39,19 @@ describe("runTypingPass", () => {
       .rejects.toMatchObject({ code: "COVERAGE_ERROR" });
   });
 
-  it("asks again for a name pool that walks the alphabet and keeps the valid set when it still does", async () => {
-    const female = [...POOL.givenByGender.female, "Aria", "Bex", "Cora", "Dina", "Elara"];
-    const namePool = { ...POOL, givenByGender: { ...POOL.givenByGender, female } };
+  it("asks again for a name pool that walks the alphabet or holds unsayable names, and keeps the valid set when they stay", async () => {
+    // run 3 of the live port city: initials climbing with gaps and one swapped pair
+    const neutral = [...POOL.givenByGender.neutral, "Jude", "Bin", "Case", "Drew", "Gin", "Hay", "Iris", "Kit", "Joi", "Liv", "Mox"];
+    const family = [...POOL.family, "Ng", "Qx"];
+    const namePool = { givenByGender: { ...POOL.givenByGender, neutral }, family };
     const model = new FakeModel(() => ({ types: GOOD_TYPES, namePool }));
     const set = await runTypingPass(named, PARAMS, undefined, model, { maxRepairRounds: 1 });
 
     expect(model.requests).toHaveLength(2);
-    expect(model.requests[1].user).toContain("walk the alphabet (Aria, Bex, Cora, Dina, Elara)");
-    expect(set.namePool.givenByGender.female).toEqual(female);
+    expect(model.requests[1].user).toContain("the neutral names walk the alphabet (Bin, Case, Drew, Gin, Hay, Iris, Kit, Joi, Liv, Mox);");
+    expect(model.requests[1].user).toContain("family names no one can say: Qx;");
+    expect(set.namePool.givenByGender.neutral).toEqual(neutral);
+    expect(set.namePool.family).toEqual(family);
   });
 
   it("throws RANGE_ERROR when type counts stay outside the given ranges", async () => {

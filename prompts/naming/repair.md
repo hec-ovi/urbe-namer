@@ -17,7 +17,7 @@ Some places of this city need a new name. They are {{topic}}. Each entity below 
 - duplicate: another place in the same pool already carries that name.
 - banned: the name contains the word or fragment the charter bans, given as word.
 - overused: too many names in this city already carry its word, given as word.
-- echo: the name copies a district or station name whole.
+- echo: the name copies a district, station, line or route name whole.
 
 Words and fragments no new name may contain, because the charter bans them or the city has used them up:
 

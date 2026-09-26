@@ -1,3 +1,5 @@
+import { VarietyCheck } from "../validate/variety.js";
+
 /** The naming charter: the style every naming batch of one world follows. The district call
  *  writes it; every later batch reads it as text, and the variety check enforces its bans. */
 export interface Charter {
@@ -12,7 +14,9 @@ export interface Charter {
 }
 
 /** Reads the charter out of a district reply; undefined when it has no usable voice.
- *  A provider that ignored the requested shape and wrote prose still counts as a voice. */
+ *  A provider that ignored the requested shape and wrote prose still counts as a voice.
+ *  A motif carrying one of the charter's own banned words ("the Neon festival" beside a ban
+ *  on "neon") is dropped, so no batch is told both to use a word and to avoid it. */
 export function readCharter(raw: unknown): Charter | undefined {
   const value = (raw as { charter?: unknown } | null)?.charter;
   if (typeof value === "string") return value.trim() ? { voice: value.trim(), registers: "", motifs: [], banned: [] } : undefined;
@@ -20,7 +24,9 @@ export function readCharter(raw: unknown): Charter | undefined {
   const fields = value as Record<string, unknown>;
   const voice = text(fields.voice);
   if (!voice) return undefined;
-  return { voice, registers: text(fields.registers), motifs: list(fields.motifs), banned: list(fields.banned) };
+  const banned = list(fields.banned);
+  const bans = new VarietyCheck(banned);
+  return { voice, registers: text(fields.registers), motifs: list(fields.motifs).filter((motif) => !bans.bannedWord(motif)), banned };
 }
 
 /** Motifs one batch is offered. Batches run side by side without seeing each other, so each
