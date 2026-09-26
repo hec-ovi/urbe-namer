@@ -118,7 +118,7 @@ describe("runNamingPass", () => {
     expect(batches.some((request) => request.user.includes("tower lights"))).toBe(false);
   });
 
-  it("asks for a missing charter again and reports a blank theme or model, an unnameable world and unrepairable names by code", async () => {
+  it("asks for a missing charter again and reports a blank theme, an unnameable world and unrepairable names by code", async () => {
     let districtCalls = 0;
     const lateCharter = new FakeModel((request) =>
       isDistrictRequest(request) && ++districtCalls === 1 ? { names: {} } : wellBehaved(request),
@@ -129,9 +129,7 @@ describe("runNamingPass", () => {
     const noCharter = new FakeModel((request) => (isDistrictRequest(request) ? { names: {} } : wellBehaved(request)));
     await expect(runNamingPass(world(), PARAMS, noCharter)).rejects.toMatchObject({ code: "COVERAGE_ERROR" });
 
-    for (const params of [{ theme: " " }, { ...PARAMS, model: "  " }]) {
-      await expect(runNamingPass(world(), params, new FakeModel())).rejects.toMatchObject({ code: "INVALID_PARAMS" });
-    }
+    await expect(runNamingPass(world(), { theme: " " }, new FakeModel())).rejects.toMatchObject({ code: "INVALID_PARAMS" });
 
     const empty = { meta: { seed: 1 }, districts: [], parcels: [] } as unknown as WorldState;
     await expect(runNamingPass(empty, PARAMS, new FakeModel()))

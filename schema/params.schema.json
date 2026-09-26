@@ -6,7 +6,6 @@
   "required": ["theme"],
   "properties": {
     "theme": { "type": "string", "pattern": "\\S", "description": "world description prompt, not blank: dystopian, modern, 1950 industrial, egyptian, medieval, anything" },
-    "model": { "type": "string", "pattern": "\\S", "description": "model id, not blank; overrides LLM_MODEL and the served model" },
     "ranges": {
       "type": "object",
       "description": "typing pass only: min and max types per category, never exact quotas",

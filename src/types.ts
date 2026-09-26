@@ -21,7 +21,7 @@ export interface NamedWorld extends WorldState {
   meta: WorldState["meta"] & { naming: NamedWorldMeta };
 }
 
-/** One placeholder entity, flattened for the LLM worksheet. */
+/** One placeholder entity, flattened for the model's worksheet. */
 export interface Nameable {
   id: string;
   placeholder: string;
@@ -46,7 +46,7 @@ export interface Business {
 
 export interface RunParams {
   theme: string;
-  model?: string;
+  /** typing pass only: min and max types per category */
   ranges?: Record<string, { min: number; max: number }>;
 }
 

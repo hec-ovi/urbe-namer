@@ -22,7 +22,7 @@ export function writeJsonFile(path: string, value: unknown, layout: JsonLayout =
   }
 }
 
-function reason(error: unknown): string {
+export function reason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 

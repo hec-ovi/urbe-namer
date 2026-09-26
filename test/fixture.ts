@@ -1,9 +1,11 @@
 /** The box's one test fixture: the small blueprint, the run params, a scripted model that
- *  plays along with each constrained output schema, and throwaway world folders. */
+ *  plays along with each output schema, an author answering request files the same way, and
+ *  throwaway world folders. */
 
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { AuthorPending } from "../src/errors.js";
 import type { ChatModel, ChatRequest } from "../src/llm/model.js";
 import type { PopulationStats } from "../src/passes/typing.js";
 import type { NpcType, WorldState } from "../src/types.js";
@@ -115,6 +117,48 @@ export function isDistrictRequest(request: ChatRequest): boolean {
 export function requiredIds(schema: Record<string, unknown> | undefined): string[] {
   const properties = schema?.properties as Record<string, { required?: string[] }> | undefined;
   return properties?.names?.required ?? [];
+}
+
+/** The request an author dir wrote to `file`, read back from its sections. */
+export function readRequest(file: string): ChatRequest {
+  const text = readFileSync(file, "utf8");
+  const between = (start: string, end: string) => {
+    const from = text.indexOf(start) + start.length;
+    return text.slice(from, text.indexOf(end, from));
+  };
+  return {
+    key: basename(file, ".md"),
+    system: between("## System\n\n", "\n\n## User"),
+    user: between("## User\n\n", "\n\n## Answer schema"),
+    schema: JSON.parse(between("```json\n", "\n```")),
+  };
+}
+
+/** Answers each request file as `handler` would, in `<key>.json` beside it. */
+export function answer(files: string[], handler: (request: ChatRequest) => unknown = wellBehaved): void {
+  for (const file of files) writeFileSync(file.replace(/\.md$/, ".json"), JSON.stringify(handler(readRequest(file))));
+}
+
+/** The stop a run makes for its author. */
+export async function stopOf(run: Promise<unknown>): Promise<AuthorPending> {
+  const error = await run.then(() => undefined, (error: unknown) => error);
+  if (!(error instanceof AuthorPending)) throw new Error(`expected the run to wait for its author, got ${String(error)}`);
+  return error;
+}
+
+/** Runs `run` again after each stop, answering the stop's requests with `handler`, until it
+ *  settles; returns its result and the request keys of each stop. */
+export async function authored<T>(run: () => Promise<T>, handler?: (request: ChatRequest) => unknown): Promise<{ result: T; stops: string[][] }> {
+  const stops: string[][] = [];
+  for (;;) {
+    try {
+      return { result: await run(), stops };
+    } catch (error) {
+      if (!(error instanceof AuthorPending) || stops.length === 10) throw error;
+      stops.push(error.requests.map((file) => basename(file, ".md")));
+      answer(error.requests, handler);
+    }
+  }
 }
 
 /** Everything a case writes lands under .test-work/. */

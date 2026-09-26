@@ -1,24 +1,26 @@
-import { resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { readJson, writeJsonFile, type JsonLayout } from "./json.js";
-import { exportBusinesses, runNamingPass, runTypingPass, runWorld, NamingError } from "./index.js";
+import { AuthorDir, AuthorPending, exportBusinesses, runNamingPass, runTypingPass, runWorld, NamingError } from "./index.js";
 import type { PopulationStats } from "./passes/typing.js";
 import type { NamedWorld, RunParams, WorldState } from "./types.js";
 import { WORLD_FILES } from "./world/folder.js";
 
 const USAGE = `usage:
-  world      <folder>           --theme "<world description>" [--model <id>] [--ranges '<json>'] [--stats <populationStats.json>]
+  world      <folder>           --theme "<world description>" [--author <dir>] [--model <id>] [--ranges '<json>'] [--stats <populationStats.json>]
              reads ${WORLD_FILES.blueprint}, writes ${WORLD_FILES.named}, ${WORLD_FILES.npcTypes} and ${WORLD_FILES.businesses} beside it
-  name       <world.json>       --theme "<world description>" [--model <id>] [--out <file>]
-  types      <named-world.json> --theme "<world description>" [--model <id>] [--ranges '<json>'] [--stats <populationStats.json>] [--out <file>]
+  name       <world.json>       --theme "<world description>" [--author <dir>] [--model <id>] [--out <file>]
+  types      <named-world.json> --theme "<world description>" [--author <dir>] [--model <id>] [--ranges '<json>'] [--stats <populationStats.json>] [--out <file>]
   businesses <named-world.json> [--out <file>]
-model server: LLM_BASE_URL (default http://localhost:8080/v1), LLM_MODEL (default: the first served model), LLM_API_KEY`;
+author dir (default: author/ beside the input): each request is <key>.md, its answer <key>.json beside it;
+exit 2 lists the requests still to answer on stdout; answer them and run the same command again.
+--model names the author in the outputs (default: author).`;
 
 /** The flags each command takes; every flag carries a value. */
 const COMMANDS: Record<string, readonly string[]> = {
-  world: ["theme", "model", "ranges", "stats"],
-  name: ["theme", "model", "out"],
-  types: ["theme", "model", "ranges", "stats", "out"],
+  world: ["theme", "author", "model", "ranges", "stats"],
+  name: ["theme", "author", "model", "out"],
+  types: ["theme", "author", "model", "ranges", "stats", "out"],
   businesses: ["out"],
 };
 
@@ -84,7 +86,13 @@ function runParams(flags: Args["flags"]): RunParams {
   } catch {
     throw new NamingError("INVALID_PARAMS", "--ranges must be JSON");
   }
-  return { theme: flags.theme!, model: flags.model, ranges };
+  return { theme: flags.theme!, ranges };
+}
+
+/** The author dir: --author, else `author/` beside the input (inside a world folder). */
+function author({ command, input, flags }: Args): AuthorDir {
+  const dir = flags.author ? here(flags.author) : join(command === "world" ? input : dirname(input), "author");
+  return new AuthorDir(dir, flags.model);
 }
 
 function readStats(flags: Args["flags"]): PopulationStats | undefined {
@@ -108,15 +116,15 @@ async function main(argv: string[]): Promise<void> {
   }
   const { command, input, flags } = args;
   if (command === "world") {
-    const run = await runWorld(input, runParams(flags), readStats(flags), undefined, { progress });
+    const run = await runWorld(input, runParams(flags), readStats(flags), author(args), { progress });
     console.log(
       `${input}: ${WORLD_FILES.named}, ${WORLD_FILES.npcTypes} (${run.types.types.length} types), ${WORLD_FILES.businesses} (${run.businesses.length} businesses)`,
     );
   } else if (command === "name") {
-    const named = await runNamingPass(readJson<WorldState>(input), runParams(flags), undefined, { progress });
+    const named = await runNamingPass(readJson<WorldState>(input), runParams(flags), author(args), { progress });
     write(args, "-named.json", named, "named world", "compact");
   } else if (command === "types") {
-    const set = await runTypingPass(readJson<NamedWorld>(input), runParams(flags), readStats(flags), undefined, { progress });
+    const set = await runTypingPass(readJson<NamedWorld>(input), runParams(flags), readStats(flags), author(args), { progress });
     write(args, "-npc-types.json", set, "NPC type set");
   } else {
     write(args, "-businesses.json", exportBusinesses(readJson<NamedWorld>(input)), "businesses list");
@@ -132,6 +140,12 @@ function detailText(detail: unknown): string | undefined {
 }
 
 main(process.argv.slice(2)).catch((error: unknown) => {
+  if (error instanceof AuthorPending) {
+    // not a failure: the run waits for its author, and stdout says what to answer
+    for (const request of error.requests) console.log(request);
+    console.error(`${error.code}: ${error.message}`);
+    process.exit(2);
+  }
   if (error instanceof UsageError) {
     console.error(`usage error: ${error.message}\n${USAGE}`);
   } else if (error instanceof NamingError) {

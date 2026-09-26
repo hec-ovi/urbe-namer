@@ -3,17 +3,17 @@ import { closeSync, openSync, readFileSync, readdirSync, writeFileSync } from 'n
 import { basename, join } from 'node:path';
 import { afterAll, expect, it } from 'vitest';
 import { runNamingPass } from '../src/index.js';
-import { FakeModel, PARAMS, ROOT, WORKDIR, folder, removeFolders, tempDir, world } from './fixture.js';
+import { FakeModel, PARAMS, ROOT, WORKDIR, answer, folder, removeFolders, tempDir, world } from './fixture.js';
 
 afterAll(removeFolders);
 
-/** Runs the published npm script with the provider stubbed inside the child process.
- *  `cwd` other than the box root runs it through `npm --prefix`; `silent: false` keeps npm's
- *  own banner, as Engine runs it. */
-async function cli(args: string[], { cwd = ROOT, env: extra = {}, silent = true }: { cwd?: string; env?: Record<string, string>; silent?: boolean } = {}) {
-  const env = { ...process.env, LLM_BASE_URL: 'https://model.test', NODE_OPTIONS: `--import tsx --import ${new URL('./cli-model.ts', import.meta.url).href}` };
-  for (const key of ['LLM_MODEL', 'LLM_PROVIDER', 'LLM_API_KEY', 'ANTHROPIC_API_KEY', 'INIT_CWD']) delete env[key as keyof typeof env];
-  Object.assign(env, extra);
+interface Options { cwd?: string; silent?: boolean }
+
+/** Runs the published npm script. `cwd` other than the box root runs it through `npm --prefix`;
+ *  `silent: false` keeps npm's own banner, as Engine runs it. */
+async function cli(args: string[], { cwd = ROOT, silent = true }: Options = {}) {
+  const env = { ...process.env };
+  delete env.INIT_CWD;
   const logs = tempDir('cli-logs-');
   const stdout = join(logs, 'stdout');
   const stderr = join(logs, 'stderr');
@@ -30,15 +30,29 @@ async function cli(args: string[], { cwd = ROOT, env: extra = {}, silent = true 
   } finally { closeSync(out); closeSync(err); }
 }
 
-it('writes the world-folder artifacts from a path relative to the caller, reporting progress on stderr', async () => {
+/** Runs the command again after each exit 2, answering the request files it lists on stdout. */
+async function authored(args: string[], options?: Options) {
+  for (let stops = 0; ; stops++) {
+    const run = await cli(args, options);
+    if (run.code !== 2 || stops === 10) return run;
+    answer(run.stdout.split('\n').filter((line) => line.endsWith('.md')));
+  }
+}
+
+it('writes the world-folder artifacts from a path relative to the caller, stopping with exit 2 for each stage its author has yet to answer', async () => {
   const dir = folder();
-  // Engine's call: plain npm run, a free-text theme that may start with "-", and unset
-  // variables that Compose passes through as empty strings
+  // Engine's call: plain npm run and a free-text theme that may start with "-"
   const theme = '- rain-soaked port city';
-  const run = await cli(['world', basename(dir), '--theme', theme], { cwd: WORKDIR, env: { LLM_MODEL: '', LLM_API_KEY: '' }, silent: false });
+  const args = ['world', basename(dir), '--theme', theme];
+  const first = await cli(args, { cwd: WORKDIR, silent: false });
+  expect(first.code).toBe(2);
+  expect(first.stdout.trim().split('\n').at(-1)).toBe(join(dir, 'author', 'naming-districts-1.md'));
+  expect(first.stderr).toContain(`AUTHOR_PENDING: 1 request awaits its completion in ${join(dir, 'author')}`);
+
+  const run = await authored(args, { cwd: WORKDIR, silent: false });
   expect(run.code).toBe(0);
-  expect(readdirSync(dir).sort()).toEqual(['blueprint.json', 'blueprint.named.json', 'businesses.json', 'npc-types.json']);
-  expect(JSON.parse(readFileSync(join(dir, 'blueprint.named.json'), 'utf8')).meta.naming).toMatchObject({ theme, model: 'stub-model' });
+  expect(readdirSync(dir).sort()).toEqual(['author', 'blueprint.json', 'blueprint.named.json', 'businesses.json', 'npc-types.json']);
+  expect(JSON.parse(readFileSync(join(dir, 'blueprint.named.json'), 'utf8')).meta.naming).toMatchObject({ theme, model: 'author' });
   // npm's banner comes first; the result is the last line
   expect(run.stdout.trim().split('\n').at(-1)).toBe(`${dir}: blueprint.named.json, npc-types.json (4 types), businesses.json (10 businesses)`);
   expect(run.stderr).toMatch(/^naming: charter and districts \(3\) in \d+\.\ds$/m);
@@ -53,17 +67,21 @@ it('refuses a missing theme, an unknown flag and a missing input with status 1 a
   }
 });
 
-it('supports each single-file command and its output flags', async () => {
+it('supports each single-file command and its author and output flags', async () => {
   const dir = folder();
   const source = join(dir, 'blueprint.json');
   const named = join(dir, 'named.json');
-  expect(await cli(['name', source, '--theme', 'port city', '--model', 'picked', '--out', named])).toMatchObject({ code: 0, stdout: `named world written to ${named}\n` });
+  const authorDir = tempDir('author-');
+  const name = await authored(['name', source, '--theme', 'port city', '--author', authorDir, '--model', 'picked', '--out', named]);
+  expect(name).toMatchObject({ code: 0, stdout: `named world written to ${named}\n` });
   expect(JSON.parse(readFileSync(named, 'utf8')).meta.naming.model).toBe('picked');
+  expect(readdirSync(authorDir)).toContain('naming-districts-1.json');
 
   const stats = join(dir, 'stats.json');
   writeFileSync(stats, JSON.stringify({ population: 5200, households: 2100, employed: 2600, unemployed: 700, perDistrict: [] }));
-  expect((await cli(['types', named, '--theme', 'port city', '--stats', stats, '--ranges', '{"worker":{"min":1,"max":2}}'])).code).toBe(0);
+  expect((await authored(['types', named, '--theme', 'port city', '--stats', stats, '--ranges', '{"worker":{"min":1,"max":2}}'])).code).toBe(0);
   expect(JSON.parse(readFileSync(join(dir, 'named-npc-types.json'), 'utf8')).types.length).toBeGreaterThan(0);
+  expect(readdirSync(join(dir, 'author'))).toEqual(['typing-1.json', 'typing-1.md']);
 
   expect((await cli(['businesses', named])).code).toBe(0);
   expect(JSON.parse(readFileSync(join(dir, 'named-businesses.json'), 'utf8')).length).toBeGreaterThan(0);
@@ -78,7 +96,7 @@ it('ends stderr with the error code line and its JSON detail when a run fails', 
 
   const named = join(tempDir(), 'named.json');
   writeFileSync(named, JSON.stringify(await runNamingPass(world(), PARAMS, new FakeModel())));
-  const ranged = await cli(['types', named, '--theme', 'port city', '--ranges', '{"worker":{"min":2,"max":5}}']);
+  const ranged = await authored(['types', named, '--theme', 'port city', '--ranges', '{"worker":{"min":2,"max":5}}']);
   expect(ranged.code).toBe(1);
   expect(ranged.stderr.slice(ranged.stderr.indexOf('RANGE_ERROR'))).toBe('RANGE_ERROR: typing repair rounds ran out\n[\n  "range: category worker has 1 types, minimum is 2"\n]\n');
 });

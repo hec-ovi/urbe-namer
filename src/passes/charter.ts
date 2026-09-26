@@ -14,7 +14,7 @@ export interface Charter {
 }
 
 /** Reads the charter out of a district reply; undefined when it has no usable voice.
- *  A provider that ignored the requested shape and wrote prose still counts as a voice.
+ *  An answer that ignored the requested shape and wrote prose still counts as a voice.
  *  A motif carrying one of the charter's own banned words ("the Neon festival" beside a ban
  *  on "neon") is dropped, so no batch is told both to use a word and to avoid it. */
 export function readCharter(raw: unknown): Charter | undefined {

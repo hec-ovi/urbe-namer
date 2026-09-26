@@ -99,7 +99,7 @@ export class TypingPass {
       });
       let raw: unknown;
       try {
-        raw = await this.model.completeJSON({ system: this.prompts.render("typing/system.md"), user, schema: typingOutputSchema(ground) });
+        raw = await this.model.completeJSON({ key: `typing-${round + 1}`, system: this.prompts.render("typing/system.md"), user, schema: typingOutputSchema(ground) });
       } catch (error) {
         if (!(error instanceof UnreadableAnswer)) throw error;
         unreadable = error.message;
